@@ -1,0 +1,212 @@
+<!-- core/templates/core/student_examens.html -->
+{% extends "base_dashboard.html" %}
+
+{% block title %}Mes examens{% endblock %}
+{% block page_title %}Mes examens{% endblock %}
+
+{% block dashboard_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-user-graduate"></i> {{ etudiant.full_name }}
+                    </h4>
+                    <div class="text-muted">
+                        {{ etudiant.matricule }} • {{ etudiant.filiere.code|default:"N/A" }}
+                    </div>
+                </div>
+                
+                <!-- Filtres -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'student_examens' %}" 
+                               class="btn btn-outline-primary {% if not request.GET.type %}active{% endif %}">
+                                Tous les examens
+                            </a>
+                            <a href="{% url 'student_examens' %}?type=a_venir" 
+                               class="btn btn-outline-primary {% if request.GET.type == 'a_venir' %}active{% endif %}">
+                                À venir
+                            </a>
+                            <a href="{% url 'student_examens' %}?type=passes" 
+                               class="btn btn-outline-primary {% if request.GET.type == 'passes' %}active{% endif %}">
+                                Passés
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Examens à venir -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-calendar-plus"></i> Examens à venir
+                    <span class="badge bg-primary float-end">{{ examens_a_venir|length }}</span>
+                </h4>
+                
+                {% if examens_a_venir %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>UE</th>
+                                <th>Salle</th>
+                                <th>Horaire</th>
+                                <th>Type</th>
+                                <th>Présence</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for examen_data in examens_a_venir %}
+                            <tr class="{% if examen_data.examen.date == today %}table-info{% endif %}">
+                                <td>
+                                    {{ examen_data.examen.date|date:"d/m/Y" }}<br>
+                                    <small>{{ examen_data.examen.date|date:"l" }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ examen_data.examen.ue.code }}</strong><br>
+                                    <small class="text-muted">{{ examen_data.examen.ue.intitule|truncatechars:30 }}</small>
+                                </td>
+                                <td>
+                                    {{ examen_data.examen.salle.code|default:"N/A" }}
+                                </td>
+                                <td>
+                                    {{ examen_data.examen.heure_debut|time:"H:i" }}<br>
+                                    <small class="text-muted">{{ examen_data.examen.duree }} min</small>
+                                </td>
+                                <td>
+                                    <span class="badge {% if examen_data.examen.type_examen == 'normal' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ examen_data.examen.get_type_examen_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if examen_data.est_present %}
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> Présent
+                                    </span><br>
+                                    <small>{{ examen_data.heure_scan|time:"H:i:s" }}</small>
+                                    {% elif examen_data.justificatif %}
+                                        {% if examen_data.statut_justificatif == 'accepte' %}
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-file-medical"></i> Justifié
+                                        </span>
+                                        {% elif examen_data.statut_justificatif == 'refuse' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-times"></i> Justificatif refusé
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock"></i> Justificatif en attente
+                                        </span>
+                                        {% endif %}
+                                    {% else %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-clock"></i> À venir
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'examen_detail' examen_data.examen.id %}" 
+                                           class="btn btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'student_qr' %}" 
+                                           class="btn btn-outline-success">
+                                            <i class="fas fa-qrcode"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Aucun examen à venir</h5>
+                    <p class="text-muted">Reposez-vous bien !</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Examens passés -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-history"></i> Historique des examens
+                    <span class="badge bg-primary float-end">{{ examens_passes|length }}</span>
+                </h4>
+                
+                {% if examens_passes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>UE</th>
+                                <th>Salle</th>
+                                <th>Horaire</th>
+                                <th>Type</th>
+                                <th>Présence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for examen in examens_passes %}
+                            <tr>
+                                <td>
+                                    {{ examen.date|date:"d/m/Y" }}
+                                </td>
+                                <td>
+                                    <strong>{{ examen.ue.code }}</strong><br>
+                                    <small class="text-muted">{{ examen.ue.intitule|truncatechars:30 }}</small>
+                                </td>
+                                <td>
+                                    {{ examen.salle.code|default:"N/A" }}
+                                </td>
+                                <td>
+                                    {{ examen.heure_debut|time:"H:i" }}
+                                </td>
+                                <td>
+                                    <span class="badge {% if examen.type_examen == 'normal' %}bg-success{% else %}bg-warning{% endif %}">
+                                        {{ examen.get_type_examen_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <!-- Pour les examens passés, vous pourriez ajouter une vérification de présence -->
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-history"></i> Passé
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-history text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">Aucun examen passé</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,161 @@
+<!-- core/templates/core/universal_login.html -->
+{% extends "base.html" %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-5">
+                    <!-- Logo et titre -->
+                    <div class="text-center mb-5">
+                        <div class="mb-4">
+                            <i class="fas fa-graduation-cap text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h2 class="h4 text-gray-900 mb-4">Connexion au système</h2>
+                        <p class="text-muted">
+                            Accédez à votre espace personnel
+                        </p>
+                    </div>
+                    
+                    <!-- Messages -->
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    
+                    <!-- Formulaire -->
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <!-- Type d'utilisateur -->
+                        <div class="mb-3">
+                            <label for="id_user_type" class="form-label">
+                                <i class="fas fa-user-tag"></i> Je suis
+                            </label>
+                            {{ form.user_type }}
+                        </div>
+                        
+                        <!-- Identifiant -->
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">
+                                <i class="fas fa-user"></i> Identifiant
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <div class="text-danger small">{{ form.username.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Votre matricule, email ou nom d'utilisateur
+                            </small>
+                        </div>
+                        
+                        <!-- Mot de passe -->
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label">
+                                <i class="fas fa-lock"></i> Mot de passe
+                            </label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                            <div class="text-danger small">{{ form.password.errors }}</div>
+                            {% endif %}
+                            
+                            <div class="mt-2 text-end">
+                                <a href="{% url 'password_reset' %}" class="small text-decoration-none">
+                                    <i class="fas fa-key"></i> Mot de passe oublié ?
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Bouton de connexion -->
+                        <div class="d-grid gap-2 mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i> Se connecter
+                            </button>
+                        </div>
+                        
+                        <!-- Aide -->
+                        <div class="text-center">
+                            <p class="small text-muted mb-2">
+                                <i class="fas fa-info-circle"></i> Selon votre profil :
+                            </p>
+                            
+                            <div class="row small text-muted">
+                                <div class="col-6">
+                                    <p class="mb-1">
+                                        <i class="fas fa-user-graduate text-primary"></i>
+                                        <strong>Étudiants :</strong>
+                                    </p>
+                                    <ul class="list-unstyled">
+                                        <li>Matricule ou email</li>
+                                        <li>Mot de passe personnel</li>
+                                    </ul>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1">
+                                        <i class="fas fa-user-shield text-secondary"></i>
+                                        <strong>Personnel :</strong>
+                                    </p>
+                                    <ul class="list-unstyled">
+                                        <li>Nom d'utilisateur ou email</li>
+                                        <li>Mot de passe institutionnel</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Support -->
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="alert alert-light">
+                            <div class="d-flex">
+                                <i class="fas fa-life-ring text-muted me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-2">Besoin d'aide ?</h6>
+                                    <p class="mb-0 small">
+                                        Problème de connexion ? Contactez le support technique :
+                                        <strong>support@universite.edu</strong> ou <strong>01 23 45 67 89</strong>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Dynamiquement changer le placeholder selon le type d'utilisateur
+    $(document).ready(function() {
+        const userTypeSelect = $('#id_user_type');
+        const usernameInput = $('#id_username');
+        
+        const placeholders = {
+            'auto': 'Matricule, email ou nom d\'utilisateur',
+            'etudiant': 'Votre matricule (ex: ETU00123)',
+            'personnel': 'Votre nom d\'utilisateur ou email',
+            'surveillant': 'Votre nom d\'utilisateur institutionnel'
+        };
+        
+        userTypeSelect.on('change', function() {
+            const type = $(this).val();
+            usernameInput.attr('placeholder', placeholders[type]);
+        });
+        
+        // Afficher/masquer le mot de passe
+        $('#togglePassword').click(function() {
+            const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+            passwordInput.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+    });
+</script>
+{% endblock %}

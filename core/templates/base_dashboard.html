@@ -1,0 +1,166 @@
+<!-- templates/base_dashboard.html -->
+{% extends "base.html" %}
+
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 40px 0;
+        margin-bottom: 30px;
+        border-radius: 0 0 20px 20px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-icon {
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+        color: var(--secondary-color);
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .quick-action-card {
+        background: white;
+        border-radius: 10px;
+        padding: 25px;
+        text-align: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        background-color: #f8f9fa;
+    }
+    
+    .action-icon {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        color: var(--secondary-color);
+    }
+    
+    .chart-container {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .recent-activity {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .activity-item {
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+    }
+    
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: white;
+    }
+    
+    .activity-icon.scan {
+        background-color: var(--success-color);
+    }
+    
+    .activity-icon.exam {
+        background-color: var(--secondary-color);
+    }
+    
+    .activity-icon.payment {
+        background-color: var(--warning-color);
+    }
+    
+    .activity-icon.system {
+        background-color: var(--accent-color);
+    }
+    
+    .activity-time {
+        font-size: 0.8rem;
+        color: #888;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="display-5 mb-3">{% block dashboard_title %}Tableau de bord{% endblock %}</h1>
+                <p class="lead mb-0">Bienvenue, {{ user.get_full_name|default:user.username }}!</p>
+                <p>{% block dashboard_subtitle %}Gestion des examens en temps réel{% endblock %}</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div class="card bg-light" style="opacity: 0.9;">
+                    <div class="card-body">
+                        <h6 class="card-title">Statut du système</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Serveur:</span>
+                            <span class="badge bg-success">En ligne</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span>Base de données:</span>
+                            <span class="badge bg-success">Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% block dashboard_content %}{% endblock %}
+</div>
+{% endblock %}

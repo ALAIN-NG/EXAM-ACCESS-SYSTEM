@@ -1,0 +1,54 @@
+# Django
+Django==5.2
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+drf-yasg==1.21.7
+django-filter==23.5
+django-rangefilter
+django-storages==1.14.2
+django-environ==0.11.2
+python-decouple==3.8
+
+# Authentification
+djangorestframework-simplejwt==5.3.1
+django-allauth==0.58.2  # Pour l'authentification sociale optionnelle
+
+# Base de données
+psycopg2-binary==2.9.9
+redis==5.0.1
+django-redis==5.4.0
+
+# QR Codes
+qrcode[pil]==7.4.2
+Pillow==10.2.0
+
+# Sécurité
+bcrypt==4.1.2
+cryptography==42.0.5
+
+# Documentation API
+coreapi==2.3.3
+
+# Utilitaires
+python-dateutil==2.9.0.post0
+openpyxl==3.1.2
+reportlab==4.1.0
+whitenoise==6.6.0
+
+# Développement
+ipython==8.23.0
+django-extensions==3.2.3
+django-debug-toolbar==4.3.0
+
+# Tests
+pytest==7.4.4
+pytest-django==4.7.0
+pytest-cov==4.1.0
+factory-boy==3.3.0
+
+# Production
+gunicorn==21.2.0
+sentry-sdk==1.40.6
+
+# Validation de données
+phonenumbers==8.13.33  # Pour la validation des numéros de téléphone

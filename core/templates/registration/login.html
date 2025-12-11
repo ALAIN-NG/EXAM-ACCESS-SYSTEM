@@ -1,0 +1,142 @@
+<!-- core/templates/registration/login.html -->
+{% extends "base.html" %}
+
+{% block title %}Connexion - Système d'Examens{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg fade-in">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <h2 class="card-title">
+                            <i class="fas fa-graduation-cap text-primary"></i><br>
+                            Connexion
+                        </h2>
+                        <p class="text-muted">Accédez à votre espace de gestion des examens</p>
+                    </div>
+                    
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Nom d'utilisateur ou mot de passe incorrect.
+                    </div>
+                    {% endif %}
+                    
+                    {% if next %}
+                        {% if user.is_authenticated %}
+                        <div class="alert alert-warning">
+                            Votre compte n'a pas accès à cette page.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            Veuillez vous connecter pour accéder à cette page.
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'login' %}">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="id_username" class="form-label">
+                                <i class="fas fa-user"></i> Nom d'utilisateur
+                            </label>
+                            <input type="text" 
+                                   name="username" 
+                                   id="id_username" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="Entrez votre nom d'utilisateur"
+                                   required
+                                   autofocus>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label">
+                                <i class="fas fa-lock"></i> Mot de passe
+                            </label>
+                            <input type="password" 
+                                   name="password" 
+                                   id="id_password" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="Entrez votre mot de passe"
+                                   required>
+                        </div>
+                        
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt"></i> Se connecter
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <input type="hidden" name="next" value="{{ next }}">
+                            <a href="{% url 'change_password' %}" class="text-decoration-none">
+                                <i class="fas fa-key"></i> Mot de passe oublié ?
+                            </a>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <div class="text-center">
+                            <p class="text-muted mb-0">Version sécurisée - Authentification requise</p>
+                            <small class="text-muted">
+                                <i class="fas fa-shield-alt"></i> Données cryptées
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Pour tout problème de connexion, contactez le support technique.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fade-in {
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+    }
+    
+    .form-control {
+        border-radius: 8px;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+    }
+    
+    .btn-primary {
+        border-radius: 8px;
+        padding: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion Étudiant{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-lg">
+                <div class="card-body p-5">
+                    <!-- Logo et titre -->
+                    <div class="text-center mb-5">
+                        <div class="mb-4">
+                            <i class="fas fa-user-graduate text-primary" style="font-size: 3rem;"></i>
+                        </div>
+                        <h2 class="h4 text-gray-900 mb-4">Connexion Étudiant</h2>
+                        <p class="text-muted">
+                            Accédez à votre espace personnel
+                        </p>
+                    </div>
+                    
+                    <!-- Formulaire -->
+                    <form method="post" action="{% url 'student_login' %}">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Matricule -->
+                        <div class="mb-4">
+                            <label for="id_matricule" class="form-label">
+                                <i class="fas fa-id-card me-2"></i>Matricule
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-user text-muted"></i>
+                                </span>
+                                <input type="text" 
+                                       name="matricule" 
+                                       id="id_matricule" 
+                                       class="form-control {% if form.matricule.errors %}is-invalid{% endif %}"
+                                       placeholder="Ex: ETU00123"
+                                       value="{{ form.matricule.value|default:'' }}"
+                                       required>
+                            </div>
+                            {% if form.matricule.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.matricule.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Votre matricule vous a été fourni lors de votre inscription
+                            </small>
+                        </div>
+                        
+                        <!-- Mot de passe -->
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label">
+                                <i class="fas fa-lock me-2"></i>Mot de passe
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="fas fa-key text-muted"></i>
+                                </span>
+                                <input type="password" 
+                                       name="password" 
+                                       id="id_password" 
+                                       class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                                       placeholder="Votre mot de passe"
+                                       required>
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.password.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Bouton de connexion -->
+                        <div class="d-grid gap-2 mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+                            </button>
+                        </div>
+                        
+                        <!-- Liens utiles -->
+                        <div class="text-center">
+                            
+                            <a href="{% url 'password_reset' %}" class="text-decoration-none small">
+                                <i class="fas fa-key me-1"></i>Mot de passe oublié ?
+                            </a>
+                            
+                            
+                            <div class="mt-3">
+                                <a href="{% url 'login' %}" class="text-decoration-none small">
+                                    <i class="fas fa-user-shield me-1"></i>Connexion personnel / enseignant
+                                </a>
+                            </div>
+                            
+                            <div class="mt-3">
+                                <a href="{% url 'home' %}" class="text-decoration-none small">
+                                    <i class="fas fa-home me-1"></i>Retour à l'accueil
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Information importante -->
+                        <div class="alert alert-warning mt-5">
+                            <div class="d-flex">
+                                <i class="fas fa-exclamation-triangle me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="alert-heading mb-2">Mot de passe oublié ?</h6>
+                                    <p class="mb-0 small">
+                                        Si vous avez oublié votre mot de passe, contactez directement 
+                                        le service administratif ou votre responsable de filière.
+                                    </p>
+                                    <p class="mb-0 small mt-2">
+                                        <strong>Service administratif:</strong> admin@universite.edu | 01 23 45 67 89
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Information importante -->
+                    <div class="alert alert-info mt-5">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle me-3 mt-1"></i>
+                            <div>
+                                <h6 class="alert-heading mb-2">Première connexion ?</h6>
+                                <p class="mb-0 small">
+                                    Si c'est votre première connexion, utilisez votre matricule comme identifiant
+                                    et votre date de naissance (format JJMMAAAA) comme mot de passe initial.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Afficher/masquer le mot de passe
+        $('#togglePassword').click(function() {
+            const passwordInput = $('#id_password');
+            const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
+            passwordInput.attr('type', type);
+            $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+        });
+        
+        // Auto-format du matricule (majuscules)
+        $('#id_matricule').on('input', function() {
+            $(this).val($(this).val().toUpperCase());
+        });
+        
+        // Focus sur le champ matricule
+        $('#id_matricule').focus();
+    });
+</script>
+{% endblock %}

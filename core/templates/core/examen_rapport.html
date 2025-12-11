@@ -1,0 +1,199 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Rapport - {{ examen.ue.code }}{% endblock %}
+{% block page_title %}Rapport de présence{% endblock %}
+
+{% block dashboard_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="card-title mb-0">
+                            <i class="fas fa-file-alt"></i> Rapport de présence
+                        </h4>
+                        <p class="text-muted mb-0">
+                            {{ examen.ue.code }} - {{ examen.date|date:"d/m/Y" }}
+                        </p>
+                    </div>
+                    <div>
+                        <a href="{% url 'examen_detail' examen.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                        <button onclick="window.print()" class="btn btn-primary ms-2">
+                            <i class="fas fa-print"></i> Imprimer
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Statistiques détaillées -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon text-primary">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-number">{{ rapport.statistiques.total_inscrits }}</div>
+                            <div class="stat-label">Inscrits</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon text-success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-number">{{ rapport.statistiques.total_presents }}</div>
+                            <div class="stat-label">Présents</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon text-warning">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                            <div class="stat-number">{{ rapport.statistiques.total_absents }}</div>
+                            <div class="stat-label">Absents</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-icon text-danger">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                            <div class="stat-number">{{ rapport.statistiques.total_refuses }}</div>
+                            <div class="stat-label">Refusés</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Graphique de présence -->
+                <div class="mb-4">
+                    <canvas id="presenceChart" height="100"></canvas>
+                </div>
+                
+                <!-- Détail des présences -->
+                <div class="mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-list"></i> Détail des présences
+                        <span class="badge bg-primary">{{ rapport.presences|length }}</span>
+                    </h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Matricule</th>
+                                    <th>Nom</th>
+                                    <th>Prénom</th>
+                                    <th>Statut</th>
+                                    <th>Heure scan</th>
+                                    <th>Méthode</th>
+                                    <th>Raison</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for presence in rapport.presences %}
+                                <tr>
+                                    <td><strong>{{ presence.matricule }}</strong></td>
+                                    <td>{{ presence.nom }}</td>
+                                    <td>{{ presence.prenom }}</td>
+                                    <td>
+                                        {% if presence.present and presence.autorise %}
+                                        <span class="badge bg-success">PRÉSENT</span>
+                                        {% elif presence.present and not presence.autorise %}
+                                        <span class="badge bg-danger">REFUSÉ</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">ABSENT</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if presence.heure_scan %}
+                                        {{ presence.heure_scan|time:"H:i:s" }}
+                                        {% else %}
+                                        —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if presence.methode_scan %}
+                                        <span class="badge bg-info">{{ presence.methode_scan }}</span>
+                                        {% else %}
+                                        —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if presence.raison_refus %}
+                                        <small class="text-danger">{{ presence.raison_refus }}</small>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Résumé -->
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5><i class="fas fa-clipboard-check"></i> Résumé</h5>
+                        <p>
+                            Taux de présence: <strong>{{ rapport.statistiques.taux_presence }}%</strong><br>
+                            <small class="text-muted">
+                                {{ rapport.statistiques.total_presents }} présents sur 
+                                {{ rapport.statistiques.total_inscrits }} inscrits.
+                            </small>
+                        </p>
+                        <p class="mb-0">
+                            <small>
+                                Rapport généré le {% now "d/m/Y à H:i" %} par {{ user.get_full_name }}
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    $(document).ready(function() {
+        // Créer le graphique de présence
+        const ctx = document.getElementById('presenceChart').getContext('2d');
+        const presenceChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Présents', 'Absents', 'Refusés'],
+                datasets: [{
+                    data: [
+                        {{ rapport.statistiques.total_presents }},
+                        {{ rapport.statistiques.total_absents }},
+                        {{ rapport.statistiques.total_refuses }}
+                    ],
+                    backgroundColor: [
+                        '#27ae60',
+                        '#f39c12',
+                        '#e74c3c'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Répartition des présences'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,335 @@
+# .gitignore
+# Django / Python
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+pdm.lock
+.pdm.toml
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.env.production
+.env.staging
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Jupyter Lab
+.jupyter/
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# KDE
+.directory
+
+# Application specific
+/media/
+/static_root/
+/logs/
+*.db
+*.sqlite3
+
+# Django migrations (sauf les fichiers init)
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# Fichiers de sauvegarde
+*.bak
+*.backup
+
+# Fichiers temporaires
+*.tmp
+*.temp
+
+# Fichiers de cache
+.cache/
+*.cache
+
+# Fichiers de session
+*.session
+
+# Fichiers de verrouillage
+*.lock
+
+# Fichiers de configuration personnelle
+config.local.yaml
+config.local.json
+config.local.py
+
+# Fichiers de dump de base de données
+*.dump
+*.sql.gz
+*.sql.bak
+
+# Fichiers de test
+test_*.py
+*_test.py
+tests/output/
+tests/data/
+
+# Fichiers générés par l'application
+generated/
+exports/
+reports/
+backups/
+
+# Fichiers de logs
+*.log
+logfile.*
+
+# Fichiers de coverage
+.coverage
+.coverage.*
+
+# Fichiers de documentation générés
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Fichiers de build
+build/
+dist/
+*.exe
+*.msi
+*.dmg
+
+# Fichiers d'installation
+install/
+setup/
+
+# Fichiers de développement
+.devcontainer/
+.docker/
+docker-compose.override.yml
+
+# Fichiers secrets - NE JAMAIS COMMITER
+secrets/
+credentials/
+keys/
+*.key
+*.pem
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# Fichiers d'environnement
+.env
+.env.local
+.env.*.local
+
+# Fichiers spécifiques au projet
+.project_settings/
+.local_settings.py
+
+# QR Code images temporaires
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+/temp/
+/tmp/
+
+# Fichiers d'upload de test
+test_uploads/
+
+# Fichiers de cache du frontend (si présent)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Fichiers de build frontend
+/build/
+/dist/
+/out/
+
+# Fichiers IDE spécifiques
+*.swp
+*.swo
+*~
+
+# Fichiers de système
+.directory
+.trash-*
+.lost+found
+
+# Fichiers Docker
+Dockerfile.local
+docker-compose.local.yml
+
+# Fichiers de déploiement
+deploy/
+*.deploy
+*.production
+*.staging
+
+# Fichiers de backup auto
+*.auto_backup
+*.auto_save
+
+# Fichiers Excel/CSV temporaires
+*.xlsx
+*.csv
+*.xls
+/temp_exports/
+
+# Fichiers PDF temporaires
+*.pdf
+/temp_pdfs/
+
+# Fichiers de photos temporaires
+/temp_photos/

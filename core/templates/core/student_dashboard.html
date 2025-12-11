@@ -1,0 +1,423 @@
+<!-- core/templates/core/student_dashboard.html -->
+{% extends "base_dashboard.html" %}
+
+{% block title %}Espace Étudiant{% endblock %}
+{% block page_title %}Mon espace étudiant{% endblock %}
+
+{% block dashboard_title %}Espace Étudiant{% endblock %}
+{% block dashboard_subtitle %}Gérez vos examens et accédez à vos informations{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <!-- Informations personnelles -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-body text-center">
+                {% if etudiant.photo %}
+                <img src="{{ etudiant.photo.url }}" 
+                     class="rounded-circle mb-3" 
+                     style="width: 150px; height: 150px; object-fit: cover; border: 3px solid var(--secondary-color);">
+                {% else %}
+                <div class="rounded-circle mb-3 d-inline-flex align-items-center justify-content-center" 
+                     style="width: 150px; height: 150px; background-color: #f0f0f0; border: 3px solid var(--secondary-color);">
+                    <i class="fas fa-user-graduate" style="font-size: 4rem; color: #ccc;"></i>
+                </div>
+                {% endif %}
+                
+                <h4>{{ etudiant.full_name }}</h4>
+                <p class="text-muted">{{ etudiant.matricule }}</p>
+                
+                <div class="mt-4 text-start">
+                    <p><i class="fas fa-graduation-cap me-2"></i> {{ etudiant.filiere.nom }}</p>
+                    <p><i class="fas fa-layer-group me-2"></i> {{ etudiant.niveau.nom }}</p>
+                    <p><i class="fas fa-envelope me-2"></i> {{ etudiant.email }}</p>
+                    <p><i class="fas fa-phone me-2"></i> {{ etudiant.telephone|default:"Non renseigné" }}</p>
+                    
+                    <div class="mt-3">
+                        <span class="badge bg-{{ etudiant.statut_badge }}">
+                            {{ etudiant.get_statut_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- QR Code personnel -->
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-qrcode"></i> Mon QR Code d'accès
+                </h5>
+                
+                <div id="qrcode-container" class="mb-3">
+                    <!-- QR Code généré dynamiquement -->
+                </div>
+                
+                <a href="{% url 'student_qr' %}" id="generate-qr" class="btn btn-primary btn-sm">
+                    <i class="fas fa-eye"></i> Voir mon QR Code
+                </a>
+                <a href="{% url 'download_qr' %}" id="download-qr" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-download"></i> Télécharger
+                </a>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle"></i>
+                    <small>Ce QR code est personnel et unique. Ne le partagez pas.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mes examens -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-calendar-alt"></i> Mes examens
+                    <span class="badge bg-primary float-end">{{ examens|length }}</span>
+                </h4>
+                
+                {% if examens %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>UE</th>
+                                <th>Salle</th>
+                                <th>Horaire</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for examen in examens %}
+                            <tr>
+                                <td>{{ examen.date|date:"d/m/Y" }}</td>
+                                <td>
+                                    <strong>{{ examen.ue.code }}</strong><br>
+                                    <small class="text-muted">{{ examen.ue.intitule|truncatechars:30 }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ examen.salle.code }}</span>
+                                </td>
+                                <td>
+                                    {{ examen.heure_debut|time:"H:i" }}<br>
+                                    <small class="text-muted">{{ examen.duree }} min</small>
+                                </td>
+                                <td>
+                                    {% if examen.est_passe %}
+                                    <span class="badge bg-secondary">Passé</span>
+                                    {% elif examen.est_en_cours %}
+                                    <span class="badge bg-success">En cours</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">À venir</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'examen_detail' examen.id %}" class="btn btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if not examen.est_passe %}
+                                        <button class="btn btn-outline-info btn-set-reminder" data-examen-id="{{ examen.id }}">
+                                            <i class="fas fa-bell"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calendar-times text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Aucun examen trouvé</h5>
+                    <p class="text-muted">Vous n'êtes inscrit à aucun examen pour le moment.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Mes paiements -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-credit-card"></i> Mes paiements
+                </h4>
+                
+                {% if paiements %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Année académique</th>
+                                <th>Montant attendu</th>
+                                <th>Montant payé</th>
+                                <th>Date paiement</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for paiement in paiements %}
+                            <tr>
+                                <td>{{ paiement.annee_academique.code }}</td>
+                                <td>{{ paiement.montant_attendu }} FCFA</td>
+                                <td>{{ paiement.montant }} FCFA</td>
+                                <td>
+                                    {% if paiement.date_paiement %}
+                                    {{ paiement.date_paiement|date:"d/m/Y" }}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if paiement.est_regle %}
+                                    <span class="badge bg-success">Réglé</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">En attente</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-credit-card text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">Aucun paiement enregistré</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Mes justificatifs -->
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-file-medical"></i> Mes justificatifs
+                    <a href="{% url 'add_justificatif' %}" class="btn btn-sm btn-primary float-end">
+                        <i class="fas fa-plus"></i> Nouveau
+                    </a>
+                </h4>
+                
+                {% if justificatifs %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Examen</th>
+                                <th>Type</th>
+                                <th>Date dépôt</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for justificatif in justificatifs %}
+                            <tr>
+                                <td>
+                                    {{ justificatif.examen.ue.code }}<br>
+                                    <small class="text-muted">{{ justificatif.examen.date|date:"d/m/Y" }}</small>
+                                </td>
+                                <td>{{ justificatif.get_type_justificatif_display }}</td>
+                                <td>{{ justificatif.date_depot|date:"d/m/Y" }}</td>
+                                <td>
+                                    {% if justificatif.statut == 'accepte' %}
+                                    <span class="badge bg-success">Accepté</span>
+                                    {% elif justificatif.statut == 'refuse' %}
+                                    <span class="badge bg-danger">Refusé</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">En attente</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ justificatif.fichier.url }}" 
+                                           class="btn btn-outline-primary" 
+                                           target="_blank">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if justificatif.statut == 'en_attente' %}
+                                        <button class="btn btn-outline-danger btn-cancel-justificatif" 
+                                                data-justificatif-id="{{ justificatif.id }}">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-file-medical-alt text-muted" style="font-size: 2rem;"></i>
+                    <p class="text-muted mt-2">Aucun justificatif déposé</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .etudiant-photo {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border: 3px solid var(--secondary-color);
+    }
+    
+    .qr-code {
+        width: 200px;
+        height: 200px;
+        margin: 0 auto;
+    }
+    
+    .badge-actif { background-color: var(--success-color); }
+    .badge-suspendu { background-color: var(--warning-color); }
+    .badge-exclu { background-color: var(--accent-color); }
+    .badge-diplome { background-color: var(--secondary-color); }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- QR Code generation library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Générer le QR Code
+        generateQRCode();
+        
+        // Gestionnaire pour le bouton de génération
+        $('#generate-qr').click(function() {
+            generateQRCode();
+        });
+        
+        // Gestionnaire pour le téléchargement
+        $('#download-qr').click(function() {
+            downloadQRCode();
+        });
+        
+        // Gestionnaire pour les rappels d'examen
+        $('.btn-set-reminder').click(function() {
+            const examenId = $(this).data('examen-id');
+            setExamenReminder(examenId);
+        });
+        
+        // Gestionnaire pour l'annulation de justificatif
+        $('.btn-cancel-justificatif').click(function() {
+            const justificatifId = $(this).data('justificatif-id');
+            cancelJustificatif(justificatifId);
+        });
+    });
+    
+    function generateQRCode() {
+        const container = document.getElementById('qrcode-container');
+        container.innerHTML = '';
+        
+        // Données à encoder dans le QR code
+        const qrData = JSON.stringify({
+            matricule: '{{ etudiant.matricule }}',
+            nom: '{{ etudiant.nom }}',
+            prenom: '{{ etudiant.prenom }}',
+            token: '{{ etudiant.qr_token }}',
+            timestamp: new Date().toISOString()
+        });
+        
+        // Générer le QR code
+        QRCode.toCanvas(container, qrData, {
+            width: 200,
+            margin: 2,
+            color: {
+                dark: '#2c3e50',
+                light: '#ffffff'
+            }
+        }, function(error) {
+            if (error) {
+                console.error(error);
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Erreur lors de la génération du QR code
+                    </div>
+                `;
+            } else {
+                console.log('QR code généré avec succès');
+            }
+        });
+    }
+    
+    function downloadQRCode() {
+        const canvas = document.querySelector('#qrcode-container canvas');
+        if (!canvas) {
+            alert('Veuillez d\'abord générer un QR code.');
+            return;
+        }
+        
+        const link = document.createElement('a');
+        link.download = 'qr-code-{{ etudiant.matricule }}.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }
+    
+    function setExamenReminder(examenId) {
+        $.ajax({
+            url: '/api/examens/' + examenId + '/set-reminder/',
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            success: function(response) {
+                alert('Rappel programmé avec succès !');
+            },
+            error: function(xhr) {
+                alert('Erreur lors de la programmation du rappel.');
+            }
+        });
+    }
+    
+    function cancelJustificatif(justificatifId) {
+        if (!confirm('Êtes-vous sûr de vouloir annuler ce justificatif ?')) {
+            return;
+        }
+        
+        $.ajax({
+            url: '/api/justificatifs/' + justificatifId + '/cancel/',
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            success: function(response) {
+                location.reload(); // Recharger la page
+            },
+            error: function(xhr) {
+                alert('Erreur lors de l\'annulation du justificatif.');
+            }
+        });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

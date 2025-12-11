@@ -1,0 +1,185 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Détail examen - {{ examen.ue.code }}{% endblock %}
+{% block page_title %}Détail de l'examen{% endblock %}
+
+{% block dashboard_content %}
+<div class="row mb-4">
+    <!-- Informations de l'examen -->
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Informations
+                    </h4>
+                    <span class="badge {% if examen.type_examen == 'normal' %}bg-success{% else %}bg-warning{% endif %}">
+                        {{ examen.get_type_examen_display }}
+                    </span>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <small class="text-muted">UE</small>
+                            <h5>{{ examen.ue.code }} - {{ examen.ue.intitule }}</h5>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Date et horaire</small>
+                            <div>
+                                <strong>{{ examen.date|date:"l d F Y" }}</strong><br>
+                                {{ examen.heure_debut|time:"H:i" }} - {{ examen.heure_fin|time:"H:i" }}
+                                <span class="text-muted">({{ examen.duree }} minutes)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <small class="text-muted">Salle</small>
+                            <h5>{{ examen.salle.code|default:"N/A" }}</h5>
+                            <p class="mb-0">
+                                <small>{{ examen.salle.capacite|default:"?" }} places • 
+                                {{ examen.salle.batiment|default:"" }} {{ examen.salle.etage|default:"" }}</small>
+                            </p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Surveillant</small>
+                            <h5>{{ examen.surveillant.get_full_name|default:"À assigner" }}</h5>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if user.groups.all.0.name == 'Surveillant' or user.is_staff %}
+                <div class="mt-4">
+                    <a href="{% url 'scan_examen' examen.id %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-qrcode"></i> Scanner pour cet examen
+                    </a>
+                    <a href="{% url 'examen_rapport' examen.id %}" class="btn btn-outline-primary btn-lg ms-2">
+                        <i class="fas fa-chart-bar"></i> Voir le rapport
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistiques -->
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-chart-pie"></i> Statistiques
+                </h4>
+                
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span>Total inscrits:</span>
+                        <strong>{{ total_inscrits }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Présents:</span>
+                        <strong class="text-success">{{ stats.total_presents }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Absents:</span>
+                        <strong class="text-warning">{{ stats.total_absents }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Refusés:</span>
+                        <strong class="text-danger">{{ stats.total_refuses }}</strong>
+                    </div>
+                </div>
+                
+                <div class="progress mb-3" style="height: 15px;">
+                    <div class="progress-bar bg-success" 
+                         role="progressbar" 
+                         style="width: {% widthratio stats.total_presents total_inscrits 100 %}%">
+                    </div>
+                </div>
+                <div class="text-center">
+                    <strong>Taux de présence: {{ stats.taux_presence }}%</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liste des étudiants -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-users"></i> Liste des étudiants
+                </h4>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Matricule</th>
+                                <th>Étudiant</th>
+                                <th>Filière</th>
+                                <th>Statut</th>
+                                <th>Heure scan</th>
+                                <th>Méthode</th>
+                                <th>Raison</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in etudiants_data %}
+                            <tr>
+                                <td>
+                                    <strong>{{ data.etudiant.matricule }}</strong>
+                                </td>
+                                <td>
+                                    {{ data.etudiant.nom }} {{ data.etudiant.prenom }}<br>
+                                    <small class="text-muted">{{ data.etudiant.email }}</small>
+                                </td>
+                                <td>
+                                    {{ data.etudiant.filiere.code|default:"N/A" }}<br>
+                                    <small>{{ data.etudiant.niveau.nom|default:"" }}</small>
+                                </td>
+                                <td>
+                                    {% if data.present %}
+                                        {% if data.autorise %}
+                                        <span class="badge bg-success">Présent</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Refusé</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-warning">Absent</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if data.scan %}
+                                    {{ data.scan.date_scan|time:"H:i:s" }}
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if data.scan %}
+                                    <span class="badge bg-info">
+                                        {{ data.scan.get_scan_method_display }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if data.scan and data.scan.raison_refus %}
+                                    <small class="text-danger">{{ data.scan.raison_refus }}</small>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

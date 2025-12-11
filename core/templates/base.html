@@ -1,0 +1,308 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.9">
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self';
+        img-src 'self' data:;
+        style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com;
+        font-src 'self' https://cdnjs.cloudflare.com;
+        ">
+
+    <title>{% block title %}Système de Gestion des Examens{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: white !important;
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .sidebar a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar a:hover, .sidebar a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .sidebar i {
+            width: 20px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card {
+            border-left: 4px solid var(--secondary-color);
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        
+        .table th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .badge-success {
+            background-color: var(--success-color);
+        }
+        
+        .badge-warning {
+            background-color: var(--warning-color);
+        }
+        
+        .badge-danger {
+            background-color: var(--accent-color);
+        }
+        
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px 0;
+            margin-top: 40px;
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                min-height: auto;
+            }
+            
+            .stat-card {
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation principale -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--primary-color);">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'dashboard' %}">
+                <i class="fas fa-graduation-cap"></i> SG Examens
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> {{ user.get_full_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user"></i> Mon profil</a></li>
+                                <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="fas fa-key"></i> Changer mot de passe</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><form method="post" action="{% url 'logout' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item border-0 bg-transparent">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Déconnexion
+                                    </button>
+                                </form></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Connexion</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            {% if user.is_authenticated %}
+            <div class="col-lg-2 col-md-3 sidebar d-none d-md-block">
+                <div class="p-3">
+                    <h5 class="mb-4"><i class="fas fa-bars"></i> Menu</h5>
+                    
+                    <a href="{% url 'dashboard' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                    </a>
+                    
+                    {% if user.is_staff or user.groups.all.0.name == 'Administrateur' %}
+                    <a href="{% url 'admin:index' %}" target="_blank">
+                        <i class="fas fa-cog"></i> Administration
+                    </a>
+                    {% endif %}
+                    
+                    {% if user.groups.all.0.name == 'Surveillant' or user.is_staff %}
+                    <a href="{% url 'scan_interface' %}">
+                        <i class="fas fa-qrcode"></i> Scanner étudiants
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'examen_list' %}">
+                        <i class="fas fa-calendar-alt"></i> Examens
+                    </a>
+                    
+                    {% if user.groups.all.0.name == 'Etudiant' %}
+                    <a href="{% url 'student_dashboard' %}">
+                        <i class="fas fa-user-graduate"></i> Mon espace
+                    </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'documentation' %}">
+                        <i class="fas fa-book"></i> Documentation
+                    </a>
+                    
+                    <hr>
+                    
+                    <div class="mt-4">
+                        <small class="text-muted">Version 1.0.0</small><br>
+                        <small class="text-muted">© {% now "Y" %} Université</small>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Contenu principal -->
+            <div class="{% if user.is_authenticated %}col-lg-10 col-md-9{% else %}col-12{% endif %} p-4 fade-in">
+                <!-- Messages -->
+                {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Titre de la page -->
+                <div class="mb-4">
+                    <h2 class="mb-3">{% block page_title %}{% endblock %}</h2>
+                    {% block breadcrumb %}{% endblock %}
+                </div>
+                
+                <!-- Contenu -->
+                <div class="content">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Système de Gestion des Examens</h5>
+                    <p>Solution sécurisée de gestion des entrées en salle d'examen</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>
+                        <i class="fas fa-phone"></i> Support: +237 699 282 479<br>
+                        <i class="fas fa-envelope"></i> alain.ng.tech@gmail.com
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        $(document).ready(function() {
+            setTimeout(function() {
+                $('.alert').alert('close');
+            }, 5000);
+            
+            // Activer les tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Confirmation pour les actions critiques
+            $('.confirm-action').on('click', function(e) {
+                if (!confirm('Êtes-vous sûr de vouloir effectuer cette action ?')) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

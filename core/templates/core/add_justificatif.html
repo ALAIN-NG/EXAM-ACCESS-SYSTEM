@@ -1,0 +1,164 @@
+{% extends "base_dashboard.html" %}
+
+{% block title %}Ajouter un justificatif{% endblock %}
+{% block page_title %}Justificatif d'absence{% endblock %}
+
+{% block dashboard_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-file-medical"></i> Déposer un justificatif
+                </h4>
+                
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Important:</strong> Les justificatifs doivent être soumis 
+                    au plus tard 48h après la date de l'examen. Formats acceptés: 
+                    PDF, JPG, PNG, DOC, DOCX (max 10MB).
+                </div>
+                
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Examen -->
+                    <div class="mb-4">
+                        <label for="{{ form.examen.id_for_label }}" class="form-label">
+                            <i class="fas fa-calendar-alt"></i> Examen concerné *
+                        </label>
+                        {{ form.examen }}
+                        {% if form.examen.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.examen.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Sélectionnez l'examen pour lequel vous présentez un justificatif
+                        </small>
+                    </div>
+                    
+                    <!-- Type de justificatif -->
+                    <div class="mb-4">
+                        <label for="{{ form.type_justificatif.id_for_label }}" class="form-label">
+                            <i class="fas fa-folder"></i> Type de justificatif *
+                        </label>
+                        {{ form.type_justificatif }}
+                        {% if form.type_justificatif.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.type_justificatif.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            <i class="fas fa-align-left"></i> Description
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Décrivez brièvement la raison de votre absence
+                        </small>
+                    </div>
+                    
+                    <!-- Fichier -->
+                    <div class="mb-4">
+                        <label for="{{ form.fichier.id_for_label }}" class="form-label">
+                            <i class="fas fa-file-upload"></i> Document justificatif *
+                        </label>
+                        {{ form.fichier }}
+                        {% if form.fichier.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.fichier.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Téléversez votre document (max 10MB). Formats: PDF, JPG, PNG, DOC, DOCX
+                        </small>
+                    </div>
+                    
+                    <!-- Boutons -->
+                    <div class="d-flex justify-content-between mt-5">
+                        <a href="{% url 'student_dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Retour
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane"></i> Soumettre le justificatif
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Liste des justificatifs déjà soumis -->
+        {% if etudiant.justificatifabsence_set.exists %}
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-history"></i> Mes justificatifs soumis
+                </h5>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Examen</th>
+                                <th>Date dépôt</th>
+                                <th>Type</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for justificatif in etudiant.justificatifabsence_set.all|slice:":5" %}
+                            <tr>
+                                <td>{{ justificatif.examen.ue.code }}</td>
+                                <td>{{ justificatif.date_depot|date:"d/m/Y" }}</td>
+                                <td>{{ justificatif.get_type_justificatif_display }}</td>
+                                <td>
+                                    {% if justificatif.statut == 'en_attente' %}
+                                    <span class="badge bg-warning">En attente</span>
+                                    {% elif justificatif.statut == 'accepte' %}
+                                    <span class="badge bg-success">Accepté</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Refusé</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="#" class="btn btn-sm btn-outline-primary">
+                        Voir tous mes justificatifs
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,264 @@
+<!-- core/templates/core/student_qr.html -->
+{% extends "base_dashboard.html" %}
+
+{% block title %}Mon QR Code{% endblock %}
+{% block page_title %}Mon QR Code d'accès{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <!-- QR Code -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-qrcode"></i> Mon QR Code personnel
+                </h4>
+                
+                <div class="mb-4">
+                    <img src="{{ qr_code }}" 
+                         alt="QR Code de {{ etudiant.full_name }}" 
+                         class="img-fluid" 
+                         style="max-width: 300px;">
+                </div>
+                
+                <div class="mb-4">
+                    <p class="text-muted">
+                        Ce QR code est personnel et confidentiel.<br>
+                        Il expire le {{ qr_valid_until|date:"d/m/Y à H:i" }}
+                    </p>
+                </div>
+                
+                <div class="btn-group" role="group">
+                    <a href="{% url 'download_qr' %}" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Télécharger
+                    </a>
+                    <button onclick="refreshQRCode()" class="btn btn-outline-primary">
+                        <i class="fas fa-sync-alt"></i> Régénérer
+                    </button>
+                    <button onclick="printQRCode()" class="btn btn-outline-secondary">
+                        <i class="fas fa-print"></i> Imprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-user"></i> Mes informations
+                </h4>
+                
+                <div class="mb-4">
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Matricule:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            <code>{{ etudiant.matricule }}</code>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Nom complet:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            {{ etudiant.nom }} {{ etudiant.prenom }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Filière:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            {{ etudiant.filiere.nom|default:"N/A" }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Niveau:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            {{ etudiant.niveau.nom|default:"N/A" }}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-sm-4">
+                            <strong>Token QR:</strong>
+                        </div>
+                        <div class="col-sm-8">
+                            <small class="text-muted">{{ etudiant.qr_token }}</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    <small>
+                        Ce QR code contient vos informations personnelles et un token unique.<br>
+                        Il est utilisé pour votre identification lors des examens.
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Examens prochains -->
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-calendar-alt"></i> Mes prochains examens
+                </h4>
+                
+                {% if examens_prochains %}
+                <div class="list-group">
+                    {% for examen in examens_prochains %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ examen.ue.code }}</h6>
+                            <small>{{ examen.date|date:"d/m" }}</small>
+                        </div>
+                        <p class="mb-1">{{ examen.ue.intitule|truncatechars:40 }}</p>
+                        <small class="text-muted">
+                            {{ examen.salle.code|default:"Salle non assignée" }} • 
+                            {{ examen.heure_debut|time:"H:i" }}
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3">
+                    <i class="fas fa-calendar-times text-muted"></i>
+                    <p class="text-muted mt-2">Aucun examen à venir</p>
+                </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{% url 'student_examens' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list"></i> Voir tous mes examens
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Guide d'utilisation -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title mb-4">
+                    <i class="fas fa-question-circle"></i> Comment utiliser mon QR Code ?
+                </h4>
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <div class="mb-3">
+                                <span class="badge bg-primary" style="font-size: 1.5rem; width: 50px; height: 50px; line-height: 50px;">1</span>
+                            </div>
+                            <h6>Préparez votre QR Code</h6>
+                            <p class="text-muted small">
+                                Téléchargez ou imprimez votre QR Code. Vous pouvez aussi l'afficher sur votre téléphone.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <div class="mb-3">
+                                <span class="badge bg-primary" style="font-size: 1.5rem; width: 50px; height: 50px; line-height: 50px;">2</span>
+                            </div>
+                            <h6>Présentez-vous à l'examen</h6>
+                            <p class="text-muted small">
+                                Arrivez au moins 30 minutes avant le début de l'examen avec votre QR Code et votre carte d'identité.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="text-center mb-3">
+                            <div class="mb-3">
+                                <span class="badge bg-primary" style="font-size: 1.5rem; width: 50px; height: 50px; line-height: 50px;">3</span>
+                            </div>
+                            <h6>Faites scanner votre code</h6>
+                            <p class="text-muted small">
+                                Présentez votre QR Code au surveillant. Le système validera automatiquement votre accès.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <small>
+                        <strong>Important:</strong> Votre QR Code est personnel. Ne le partagez avec personne.<br>
+                        En cas de perte ou de problème, contactez immédiatement l'administration.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function refreshQRCode() {
+        if (confirm('Voulez-vous générer un nouveau QR Code ? L\'ancien ne sera plus valide.')) {
+            $.ajax({
+                url: '{% url "generate_qr_code_api" %}',
+                type: 'GET',
+                success: function(response) {
+                    if (response.qr_code) {
+                        $('img[alt*="QR Code"]').attr('src', response.qr_code);
+                        alert('QR Code régénéré avec succès !');
+                    }
+                },
+                error: function() {
+                    alert('Erreur lors de la régénération du QR Code.');
+                }
+            });
+        }
+    }
+    
+    function printQRCode() {
+        // Créer une fenêtre d'impression avec le QR code
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>QR Code - {{ etudiant.matricule }}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    .qr-container { text-align: center; margin: 50px 0; }
+                    .info { margin-top: 30px; border-top: 1px solid #ccc; padding-top: 20px; }
+                    .info p { margin: 5px 0; }
+                </style>
+            </head>
+            <body>
+                <h2>QR Code d'accès aux examens</h2>
+                <div class="qr-container">
+                    <img src="${$('img[alt*="QR Code"]').attr('src')}" style="width: 300px;">
+                </div>
+                <div class="info">
+                    <p><strong>Étudiant:</strong> {{ etudiant.nom }} {{ etudiant.prenom }}</p>
+                    <p><strong>Matricule:</strong> {{ etudiant.matricule }}</p>
+                    <p><strong>Filière:</strong> {{ etudiant.filiere.nom|default:"N/A" }}</p>
+                    <p><strong>Généré le:</strong> {% now "d/m/Y à H:i" %}</p>
+                    <p><strong>Valide jusqu'au:</strong> {{ qr_valid_until|date:"d/m/Y à H:i" }}</p>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
+</script>
+{% endblock %}

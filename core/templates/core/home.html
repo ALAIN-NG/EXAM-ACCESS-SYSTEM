@@ -1,0 +1,117 @@
+<!-- core/templates/core/home.html -->
+{% extends "base.html" %}
+
+{% block title %}Accueil - Système de Gestion des Examens{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Hero Section -->
+    <div class="row align-items-center py-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">
+                Système de Gestion des<br>
+                <span class="text-primary">Entrées en Salle d'Examen</span>
+            </h1>
+            <p class="lead mb-4">
+                Solution sécurisée et moderne pour la gestion des accès aux examens universitaires.
+                Contrôle d'accès par QR code, traçabilité complète et interface intuitive.
+            </p>
+            <div class="d-grid gap-2 d-md-flex">
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4 me-md-2">
+                    <i class="fas fa-sign-in-alt"></i> Se connecter
+                </a>
+                <a href="#features" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="fas fa-info-circle"></i> En savoir plus
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="text-center">
+                <img src="/static/images/icone.jpeg" 
+                     alt="Examen universitaire" 
+                     class="img-fluid"
+                     style="width: 500px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row py-5" id="features">
+        <div class="col-12 text-center mb-5">
+            <h2 class="display-5 mb-3">Fonctionnalités principales</h2>
+            <p class="lead text-muted">Tout ce dont vous avez besoin pour une gestion optimale des examens</p>
+        </div>
+        
+        {% for feature in features %}
+        <div class="col-lg-3 col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature-icon mb-3">
+                        <i class="fas {{ feature.icon }} fa-3x text-primary"></i>
+                    </div>
+                    <h4 class="card-title">{{ feature.title }}</h4>
+                    <p class="card-text text-muted">{{ feature.desc }}</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Stats Section -->
+    <div class="row py-5 bg-light rounded-3">
+        <div class="col-md-3 text-center mb-4">
+            <h2 class="display-3 fw-bold text-primary">100%</h2>
+            <p class="lead">Sécurisé</p>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <h2 class="display-3 fw-bold text-primary">24/7</h2>
+            <p class="lead">Disponible</p>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <h2 class="display-3 fw-bold text-primary">0</h2>
+            <p class="lead">Erreur humaine</p>
+        </div>
+        <div class="col-md-3 text-center mb-4">
+            <h2 class="display-3 fw-bold text-primary">∞</h2>
+            <p class="lead">Évolutif</p>
+        </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="row py-5 text-center">
+        <div class="col-12">
+            <h2 class="display-5 mb-4">Prêt à moderniser la gestion de vos examens ?</h2>
+            <p class="lead mb-4">Rejoignez les établissements qui nous font déjà confiance</p>
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-5">
+                <i class="fas fa-rocket"></i> Commencer maintenant
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background-color: rgba(52, 152, 219, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+    }
+    
+    .card {
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-10px);
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+</style>
+{% endblock %}
