@@ -492,3 +492,29 @@ FRONTEND_CONFIG = {
     'DASHBOARD_PATH': '/dashboard',
     'STUDENT_PORTAL_PATH': '/student',
 }
+
+
+
+# Détection de l'environnement
+ENVIRONMENT = config('ENVIRONMENT', default='development')
+
+# Configuration basée sur l'environnement
+if ENVIRONMENT == 'production':
+    # Forcer certains paramètres en production
+    DEBUG = config('DEBUG', default=False, cast=bool)
+    
+    # Sécurité renforcée
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Logging en production
+    LOGGING['handlers']['console']['level'] = 'WARNING'
+    
+elif ENVIRONMENT == 'staging':
+    DEBUG = config('DEBUG', default=True, cast=bool)
+    # Paramètres intermédiaires
+    
+else:  # development
+    DEBUG = config('DEBUG', default=True, cast=bool)
+    # Paramètres de développement

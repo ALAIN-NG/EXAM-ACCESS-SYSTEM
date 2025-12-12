@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: exam-access-system
+    env: python
+    region: oregon 
+    plan: free
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn exam_access_system.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: exam-access-db
+          property: connectionString
+    healthCheckPath: /health/
+    autoDeploy: true
+
+  - type: pscale
+    name: exam-access-db
+    plan: free
+    region: frankfurt
+    databaseName: exam_access_db
+    user: exam_admin
