@@ -273,16 +273,20 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Email configuration (pour les notifications)
+
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_HOST = config('EMAIL_HOST', default='')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@examen-system.edu')
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 
-# Logging configuration
+# Les identifiants 
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+
+# Expéditeur par défaut
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@exam-system.edu')
+SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 
 # Créer le dossier logs s'il n'existe pas
 LOG_DIR = BASE_DIR / 'logs'
@@ -396,7 +400,7 @@ if USE_S3:
 # Configuration des sessions pour support multi-onglets
 SESSION_COOKIE_NAME = 'sessionid'  # Garder le nom standard
 SESSION_COOKIE_AGE = 86400  # 24 heures en secondes
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Garder la session après fermeture du navigateur
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True # Garder la session après fermeture du navigateur
 SESSION_SAVE_EVERY_REQUEST = True  # Rafraîchir l'expiration à chaque requête
 
 # Utiliser des sessions signées pour plus de sécurité
