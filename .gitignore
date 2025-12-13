@@ -1,19 +1,11 @@
 # ============================================
-# .gitignore pour Django en Production
-# Base de données SQLite gérée avec soin
+# .gitignore pour Django avec BD SQLite incluse
+# AVERTISSEMENT: La base de données est COMMITÉE
 # ============================================
 
 # ------------------------------------------------------------
-# SECTION 1: FICHIERS DJANGO & PYTHON ESSENTIELS À IGNORER
+# SECTION 1: FICHIERS À IGNORER (BD SQLite NON INCLUSE)
 # ------------------------------------------------------------
-
-# Base de données SQLite (avec gestion spécifique)
-db.sqlite3
-db.sqlite3-journal
-*.sqlite3
-*.sqlite3-journal
-*.db
-*.db-journal
 
 # Fichiers Python compilés
 __pycache__/
@@ -40,14 +32,10 @@ pythonenv/
 .env.development
 .env.test
 
-# Fichiers de configuration locale
-local_settings.py
-settings/local.py
-config/local.py
+# Fichiers de configuration locale avec secrets
 *.local.py
-*.local.yaml
-*.local.json
-*.local.toml
+secrets.py
+local_secrets.py
 
 # Secrets et clés (NE JAMAIS COMMITER)
 secrets/
@@ -87,43 +75,28 @@ error.log
 *.session
 
 # ------------------------------------------------------------
-# SECTION 2: GESTION SPÉCIFIQUE SQLite POUR PRODUCTION
+# SECTION 2: FICHIERS SQLite TEMPORAIRES À IGNORER
 # ------------------------------------------------------------
 
-# Bases de données temporaires et de test
-test_db.sqlite3
-test_*.sqlite3
-development.sqlite3
-staging.sqlite3
-
-# Sauvegardes de base de données
-backups/
-database_backups/
-*.sqlite3.backup
-*.sqlite3.bak
-*.db.backup
-*.db.bak
-*.dump
-*.sql.gz
-*.sql.bz2
-
-# WAL files (Write-Ahead Logging)
+# Fichiers journaux WAL (Write-Ahead Logging)
 *-wal
 *-shm
+*.sqlite3-wal
+*.sqlite3-shm
+*-journal
 
-# Fichiers temporaires SQLite
-*.db-temp
-*.sqlite3-temp
+# Bases de données de test et développement
+test_db.sqlite3
+development.sqlite3
+staging.sqlite3
+*.test.db
+*.dev.db
 
-# Dumps SQL
-database_dumps/
-*.sql
-full_dump_*.sql
-
-# Migrations de base de données (conservées sous contrôle de version)
-# Note: Les fichiers de migrations Django sont conservés, mais pas les bases
-# */migrations/*.py
-# !*/migrations/__init__.py
+# Sauvegardes automatiques
+*.backup
+*.bak
+*.old
+*.prev
 
 # ------------------------------------------------------------
 # SECTION 3: FICHIERS DE DÉVELOPPEMENT ET BUILD
@@ -229,22 +202,11 @@ $RECYCLE.BIN/
 uploads/temp/
 temp_uploads/
 
-# Exports et rapports
-/exports/
-/reports/
-/generated/
-/output/
-
-# Fichiers de déploiement
-deploy/
-*.deploy
-.deployment
-.cpanel.yml
-
-# Fichiers Docker (sauf ceux nécessaires)
-Dockerfile.local
-docker-compose.override.yml
-.dockerignore.local
+# Exports et rapports temporaires
+/temp_exports/
+/temp_reports/
+/generated_tmp/
+/output_tmp/
 
 # Cache de dépendances
 .pip-cache/
@@ -273,48 +235,8 @@ webpack-stats.json
 *.min.css
 
 # ------------------------------------------------------------
-# SECTION 7: FICHIERS SPÉCIFIQUES À L'APPLICATION
+# SECTION 7: CONFIGURATIONS PERSONNELLES ET LOCAL
 # ------------------------------------------------------------
-
-# Fichiers QR code temporaires
-/temp_qr/
-*.qr.png
-*.qr.jpg
-*.qr.tmp
-
-# Images temporaires
-*.tmp.png
-*.tmp.jpg
-*.tmp.jpeg
-*.tmp.gif
-*.tmp.bmp
-
-# Fichiers PDF temporaires
-*.tmp.pdf
-/temp_pdfs/
-
-# Fichiers Excel/CSV temporaires
-*.tmp.csv
-*.tmp.xlsx
-*.tmp.xls
-/temp_exports/
-
-# Photos étudiantes uploadées (si stockées localement)
-/media/student_photos/
-/media/profile_pictures/
-
-# Cache des scans
-scan_cache/
-qr_cache/
-
-# ------------------------------------------------------------
-# SECTION 8: CONFIGURATIONS PERSONNELLES ET LOCAL
-# ------------------------------------------------------------
-
-# Fichiers de configuration personnelle
-config.local.*
-settings.local.*
-*.local.*
 
 # Fichiers de développement personnel
 .developer_notes
@@ -325,49 +247,3 @@ scratchpad.*
 debug.log
 debug_output/
 *.debug
-
-# ------------------------------------------------------------
-# SECTION 9: EXCEPTIONS - FICHIERS À CONSERVER
-# ------------------------------------------------------------
-
-# !README.md
-# !LICENSE
-# !requirements.txt
-# !Pipfile
-# !pyproject.toml
-# !Dockerfile
-# !docker-compose.yml
-# !.dockerignore
-# !.gitlab-ci.yml
-# !.github/workflows/*.yml
-# !Makefile
-# !manage.py
-# !*/migrations/__init__.py
-
-# !.vscode/settings.json    # Pour partager des settings d'équipe
-# !.vscode/extensions.json  # Pour partager des extensions recommandées
-
-# ------------------------------------------------------------
-# NOTES IMPORTANTES POUR LA PRODUCTION AVEC SQLite
-# ------------------------------------------------------------
-
-# IMPORTANT: En production avec SQLite sur GitHub:
-# 1. Ne JAMAIS commiter la base de données de production
-# 2. Utiliser des migrations Django pour le schéma
-# 3. Pour les données initiales, utiliser:
-#    - fixtures/ (données de test)
-#    - scripts d'initialisation
-#    - management commands
-# 4. En production, la base sera créée automatiquement
-#    ou restaurée depuis une sauvegarde sécurisée
-# 5. Les WAL files (*-wal, *-shm) sont temporaires et ne doivent
-#    pas être commités
-
-# Pour initialiser une nouvelle instance:
-# 1. python manage.py migrate
-# 2. python manage.py loaddata initial_data.json (si disponible)
-# 3. python manage.py createsuperuser
-
-# Pour les données sensibles (utilisateurs, scans):
-# - Elles doivent être gérées en production uniquement
-# - Ne jamais inclure de données réelles dans le repo
