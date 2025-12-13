@@ -812,6 +812,135 @@ class VerifyQRCodeView(APIView):
             })
 
 
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+
+@login_required
+@csrf_exempt  # Temporaire pour les tests, à sécuriser en production
+def scanner_api(request, examen_id):
+    """API pour scanner un étudiant"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
+    
+    examen = get_object_or_404(Examen, id=examen_id)
+    
+    # Vérifier les permissions
+    if not (request.user.groups.filter(name='Surveillant').exists() or 
+            examen.surveillant == request.user or 
+            request.user.is_staff):
+        return JsonResponse({'error': 'Permission refusée'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        qr_data = data.get('qr_data')
+        scan_method = data.get('scan_method', 'qrcode')
+        
+        # Décoder le QR code
+        qr_info = json.loads(qr_data)
+        matricule = qr_info.get('matricule')
+        
+        if not matricule:
+            return JsonResponse({
+                'success': False,
+                'message': 'QR code invalide - matricule manquant'
+            })
+        
+        # Chercher l'étudiant
+        try:
+            etudiant = Etudiant.objects.get(matricule=matricule)
+        except Etudiant.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Étudiant non trouvé'
+            })
+        
+        # Vérifier si déjà scanné
+        existing_scan = ControleAcces.objects.filter(
+            examen=examen,
+            etudiant=etudiant
+        ).first()
+        
+        if existing_scan:
+            return JsonResponse({
+                'success': False,
+                'message': 'Étudiant déjà scanné',
+                'etudiant': {
+                    'matricule': etudiant.matricule,
+                    'nom': etudiant.nom,
+                    'prenom': etudiant.prenom
+                },
+                'raison': f'Déjà scanné à {existing_scan.date_scan.time()}'
+            })
+        
+        # Vérifier l'inscription
+        inscription = InscriptionUE.objects.filter(
+            etudiant=etudiant,
+            ue=examen.ue,
+            annee_academique=examen.annee_academique
+        ).first()
+        
+        autorise = False
+        raison = ""
+        
+        if not inscription:
+            raison = "Non inscrit à cette UE"
+        elif not inscription.est_autorise_examen:
+            raison = "Inscription non autorisée pour les examens"
+        elif etudiant.statut != 'actif':
+            raison = f"Étudiant {etudiant.get_statut_display()}"
+        else:
+            autorise = True
+        
+        # Enregistrer le scan
+        scan = ControleAcces.objects.create(
+            examen=examen,
+            etudiant=etudiant,
+            scanned_by=request.user,
+            autorise=autorise,
+            scan_method=scan_method,
+            raison_refus=raison if not autorise else None
+        )
+        
+        # Log l'action
+        AuditLog.objects.create(
+            utilisateur=request.user,
+            action_type='scan',
+            action=f'Scan {scan_method} pour {examen.ue.code}',
+            details={
+                'etudiant_id': etudiant.id,
+                'matricule': etudiant.matricule,
+                'autorise': autorise,
+                'scan_id': scan.id
+            },
+            ip=request.META.get('REMOTE_ADDR')
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'autorise': autorise,
+            'etudiant': {
+                'matricule': etudiant.matricule,
+                'nom': etudiant.nom,
+                'prenom': etudiant.prenom,
+                'filiere': etudiant.filiere.nom if etudiant.filiere else None
+            },
+            'scan_id': scan.id,
+            'timestamp': scan.date_scan.isoformat(),
+            'message': 'Accès autorisé' if autorise else f'Accès refusé: {raison}'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Données JSON invalides'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Erreur serveur: {str(e)}'
+        })
 
 
 
@@ -854,10 +983,23 @@ def scan_interface(request):
     }
     return render(request, 'core/scan_interface.html', context)
 
+
+
 @login_required
 def scan_examen(request, examen_id):
     """Interface de scan pour un examen spécifique"""
-    examen = get_object_or_404(Examen, id=examen_id)
+    # Récupérer l'examen avec toutes les relations nécessaires
+    examen = get_object_or_404(
+        Examen.objects.select_related(
+            'ue', 
+            'ue__filiere', 
+            'ue__niveau', 
+            'salle', 
+            'surveillant', 
+            'annee_academique'
+        ),
+        id=examen_id
+    )
     
     # Vérifier les permissions
     if not (request.user.groups.filter(name='Surveillant').exists() or 
@@ -866,12 +1008,65 @@ def scan_examen(request, examen_id):
         messages.error(request, "Vous n'avez pas la permission de scanner cet examen.")
         return redirect('dashboard')
     
+    # Récupérer les scans existants
+    scans_total = ControleAcces.objects.filter(examen=examen)
+    
+    # Scans récents pour l'historique
+    scans_recent = scans_total.select_related(
+        'etudiant', 
+        'etudiant__filiere'
+    ).order_by('-date_scan')[:10]
+    
+    # Calculer les statistiques de base
+    total_inscrits = InscriptionUE.objects.filter(
+        ue=examen.ue,
+        annee_academique=examen.annee_academique,
+        est_autorise_examen=True
+    ).count()
+    
+    total_presents = scans_total.filter(autorise=True).count()
+    total_refuses = scans_total.filter(autorise=False).count()
+    
+    # Préparer les données des étudiants
+    inscriptions = InscriptionUE.objects.filter(
+        ue=examen.ue,
+        annee_academique=examen.annee_academique,
+        est_autorise_examen=True
+    ).select_related(
+        'etudiant',
+        'etudiant__filiere',
+        'etudiant__niveau'
+    ).prefetch_related('etudiant__paiement_set')
+    
+    etudiants_data = []
+    for inscription in inscriptions:
+        etudiant = inscription.etudiant
+        
+        # Vérifier si déjà scanné
+        scan = scans_total.filter(etudiant=etudiant).first()
+        
+        # Vérifier le paiement
+        paiement_regle = etudiant.paiement_set.filter(
+            annee_academique=examen.annee_academique,
+            est_regle=True
+        ).exists()
+        
+        etudiants_data.append({
+            'etudiant': etudiant,
+            'inscription': inscription,
+            'scan': scan,
+            'paiement_regle': paiement_regle,
+        })
+    
     context = {
         'examen': examen,
-        'scans_recent': ControleAcces.objects.filter(
-            examen=examen
-        ).select_related('etudiant').order_by('-date_scan')[:10],
+        'scans_recent': scans_recent,
+        'total_inscrits': total_inscrits,
+        'total_presents': total_presents,
+        'total_refuses': total_refuses,
+        'etudiants_data': etudiants_data,
     }
+    
     return render(request, 'core/scan_examen.html', context)
 
 @login_required

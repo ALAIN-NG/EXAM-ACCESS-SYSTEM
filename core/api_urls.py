@@ -35,6 +35,7 @@ api_urlpatterns = [
     
     # Scan rapide (interface surveillant)
     path('scan-rapide/', views.ScanRapideView.as_view(), name='scan_rapide'),
+    path('api/examen/<int:examen_id>/scanner/', views.scanner_api, name='scan_examen_api'),
     
     # Vérification publique QR code
     path('verify-qr/', views.VerifyQRCodeView.as_view(), name='verify_qr'),

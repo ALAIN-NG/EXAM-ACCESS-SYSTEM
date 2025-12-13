@@ -1,0 +1,750 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Scanner - {{ examen.ue.code }}{% endblock %}
+{% block page_title %}Scanner les étudiants - {{ examen.ue.code }}{% endblock %}
+
+{% block dashboard_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Interface de scan -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-qrcode"></i> Scanner les étudiants
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Informations examen -->
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h5>{{ examen.ue.intitule }}</h5>
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Salle</small>
+                                <strong>{{ examen.salle.code|default:"Non définie" }}</strong>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Horaire</small>
+                                <strong>{{ examen.heure_debut|time:"H:i" }} - {{ examen.heure_fin|time:"H:i" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-info mb-0">
+                            <h6 class="alert-heading">Statistiques</h6>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Inscrits:</span>
+                                <strong class="text-primary">{{ total_inscrits }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Présents:</span>
+                                <strong class="text-success">{{ total_presents }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span>Refusés:</span>
+                                <strong class="text-danger">{{ total_refuses }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Scanner -->
+                <div class="text-center mb-4">
+                    <div id="qr-scanner" style="width: 100%; max-width: 500px; margin: 0 auto;">
+                        <div id="reader" style="width: 100%;"></div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <button id="start-scanner" class="btn btn-primary btn-lg">
+                            <i class="fas fa-play"></i> Démarrer le scanner
+                        </button>
+                        <button id="stop-scanner" class="btn btn-secondary btn-lg" style="display: none;">
+                            <i class="fas fa-stop"></i> Arrêter le scanner
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Entrée manuelle du matricule -->
+                <div class="mb-4">
+                    <label class="form-label"><i class="fas fa-id-card"></i> Saisie manuelle</label>
+                    <div class="input-group input-group-lg">
+                        <input type="text" 
+                               id="matricule-input" 
+                               class="form-control" 
+                               placeholder="Ex: ETU00123"
+                               maxlength="20"
+                               autocomplete="off"
+                               autofocus>
+                        <button id="scan-manuel" class="btn btn-primary">
+                            <i class="fas fa-check"></i> Valider
+                        </button>
+                    </div>
+                    <small class="text-muted mt-1">
+                        <i class="fas fa-info-circle"></i> Appuyez sur <kbd>Enter</kbd> pour valider
+                    </small>
+                </div>
+                
+                <!-- Résultat du scan -->
+                <div id="scan-result" class="mb-4" style="display: none;">
+                    <!-- Le résultat du scan sera affiché ici -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Liste des scans récents -->
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history"></i> Scans récents
+                    </h5>
+                    <span class="badge bg-light text-dark">{{ scans_recent|length }}</span>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if scans_recent %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="120">Heure</th>
+                                    <th>Étudiant</th>
+                                    <th width="100">Méthode</th>
+                                    <th width="100">Statut</th>
+                                    <th width="150">Raison</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for scan in scans_recent %}
+                                <tr>
+                                    <td>{{ scan.date_scan|time:"H:i" }}</td>
+                                    <td>
+                                        <div>
+                                            <strong>{{ scan.etudiant.matricule }}</strong>
+                                            <div class="text-muted small">
+                                                {{ scan.etudiant.nom }} {{ scan.etudiant.prenom }}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ scan.get_scan_method_display|default:"QR Code" }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if scan.autorise %}
+                                            <span class="badge bg-success">Autorisé</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Refusé</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not scan.autorise %}
+                                            <small class="text-danger">
+                                                {{ scan.raison_refus|default:"Non spécifiée" }}
+                                            </small>
+                                        {% else %}
+                                            <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">Aucun scan enregistré</p>
+                        <small class="text-muted">Commencez à scanner des étudiants</small>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-transparent">
+                <a href="{% url 'examen_detail' examen.id %}" class="btn btn-outline-info btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i> Voir les détails complets
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Liste des étudiants -->
+        <div class="card mb-4 h-100">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-users"></i> Étudiants inscrits
+                </h5>
+                <div>
+                    <span class="badge bg-success">{{ total_presents }}</span>
+                    <span class="badge bg-danger">{{ total_refuses }}</span>
+                </div>
+            </div>
+            <div class="card-body p-0" style="max-height: 400px; overflow-y: auto;">
+                <div class="list-group list-group-flush">
+                    {% for data in etudiants_data %}
+                    <div class="list-group-item border-start-0 border-end-0 {% if forloop.first %}border-top-0{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                {% if data.scan %}
+                                    {% if data.scan.autorise %}
+                                        <span class="badge bg-success me-2"><i class="fas fa-check"></i></span>
+                                    {% else %}
+                                        <span class="badge bg-danger me-2"><i class="fas fa-times"></i></span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary me-2"><i class="fas fa-clock"></i></span>
+                                {% endif %}
+                                <strong>{{ data.etudiant.matricule }}</strong>
+                            </div>
+                            <div>
+                                {% if data.paiement_regle %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i></span>
+                                {% else %}
+                                    <span class="badge bg-danger"><i class="fas fa-times"></i></span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between">
+                                <span>{{ data.etudiant.nom }} {{ data.etudiant.prenom }}</span>
+                                {% if not data.scan %}
+                                    <button class="btn btn-sm btn-outline-primary scan-quick-btn" 
+                                            data-matricule="{{ data.etudiant.matricule }}"
+                                            title="Scanner cet étudiant">
+                                        <i class="fas fa-user-check"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+                            {% if data.scan and not data.scan.autorise %}
+                                <div class="mt-1">
+                                    <small class="text-danger">
+                                        <i class="fas fa-exclamation-triangle me-1"></i>
+                                        {{ data.scan.raison_refus|default:"Raison non spécifiée" }}
+                                    </small>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-1">Aucun étudiant inscrit</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Guide et actions rapides -->
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-question-circle"></i> Guide rapide
+                </h5>
+                
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">1</span>
+                            <div>
+                                <small class="text-muted">Démarrez le scanner QR Code</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">2</span>
+                            <div>
+                                <small class="text-muted">Scannez le QR code de l'étudiant</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="list-group-item border-0 px-0">
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary me-3">3</span>
+                            <div>
+                                <small class="text-muted">Ou entrez manuellement le matricule</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-lightbulb"></i>
+                    <small>
+                        Pour un scan optimal, assurez-vous que le QR code est bien éclairé et centré.
+                    </small>
+                </div>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'examen_rapport' examen.id %}" class="btn btn-info">
+                        <i class="fas fa-chart-bar me-2"></i>Voir le rapport
+                    </a>
+                    <a href="{% url 'scan_interface' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à la sélection
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    #reader {
+        border: 2px dashed #28a745;
+        border-radius: 10px;
+        padding: 20px;
+        background-color: #f8f9fa;
+    }
+    
+    #reader video {
+        border-radius: 8px;
+    }
+    
+    .scan-result-success {
+        border: 2px solid #28a745;
+        background-color: rgba(40, 167, 69, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .scan-result-error {
+        border: 2px solid #dc3545;
+        background-color: rgba(220, 53, 69, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    .scan-result-warning {
+        border: 2px solid #ffc107;
+        background-color: rgba(255, 193, 7, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+    
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+    
+    .list-group-item:hover {
+        background-color: rgba(0, 123, 255, 0.05);
+    }
+    
+    #scan-overlay {
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px;
+    }
+    
+    kbd {
+        background-color: #6c757d;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.875em;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- HTML5-QRCode library -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script>
+    let html5QrCode;
+    const examenId = {{ examen.id }};
+    const scanUrl = "{% url 'scan_examen_api' examen.id %}";
+    
+    $(document).ready(function() {
+        // Initialiser le scanner
+        html5QrCode = new Html5Qrcode("reader");
+        
+        // Gestionnaire pour le bouton démarrer/arrêter
+        $('#start-scanner').click(function() {
+            startScanner();
+        });
+        
+        $('#stop-scanner').click(function() {
+            stopScanner();
+        });
+        
+        // Gestionnaire pour le scan manuel
+        $('#scan-manuel').click(function() {
+            const matricule = $('#matricule-input').val().trim();
+            if (!matricule) {
+                showErrorResult('Veuillez saisir un matricule.');
+                return;
+            }
+            
+            scanManuel(matricule);
+        });
+        
+        // Raccourci clavier pour le scan manuel
+        $('#matricule-input').keypress(function(e) {
+            if (e.which === 13) { // Enter key
+                e.preventDefault();
+                $('#scan-manuel').click();
+            }
+        });
+        
+        // Boutons de scan rapide dans la liste
+        $('.scan-quick-btn').click(function() {
+            const matricule = $(this).data('matricule');
+            $('#matricule-input').val(matricule).focus();
+            showToast('info', `Prêt à scanner: ${matricule}`);
+        });
+        
+        // Focus sur le champ matricule au chargement
+        $('#matricule-input').focus();
+    });
+    
+    function startScanner() {
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            rememberLastUsedCamera: true
+        };
+        
+        html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccess,
+            onScanError
+        ).then(() => {
+            $('#start-scanner').hide();
+            $('#stop-scanner').show();
+            $('#reader').addClass('pulse');
+            showToast('success', 'Scanner démarré avec succès');
+        }).catch(err => {
+            console.error(err);
+            showErrorResult('Impossible de démarrer le scanner. Vérifiez les permissions de la caméra.');
+        });
+    }
+    
+    function stopScanner() {
+        html5QrCode.stop().then(() => {
+            $('#start-scanner').show();
+            $('#stop-scanner').hide();
+            $('#reader').removeClass('pulse');
+            showToast('info', 'Scanner arrêté');
+        }).catch(err => {
+            console.error(err);
+        });
+    }
+    
+    function onScanSuccess(decodedText) {
+        // Arrêter temporairement le scanner
+        html5QrCode.pause();
+        
+        console.log('QR Code détecté:', decodedText);
+        
+        // Traiter le QR code
+        processScan(decodedText, 'qrcode');
+        
+        // Redémarrer après 2 secondes
+        setTimeout(() => {
+            html5QrCode.resume();
+        }, 2000);
+    }
+    
+    function onScanError(error) {
+        console.warn(`Erreur de scan: ${error}`);
+    }
+    
+    function validateMatricule(matricule) {
+        const regex = /^[A-Z0-9\-]{5,20}$/;
+        return regex.test(matricule);
+    }
+    
+    function scanManuel(matricule) {
+        if (!validateMatricule(matricule)) {
+            showErrorResult('Format de matricule invalide. Utilisez uniquement des lettres majuscules, chiffres et tirets.');
+            return;
+        }
+        
+        processScan(matricule, 'manuel');
+        $('#matricule-input').val('');
+    }
+    
+    function processScan(data, method) {
+        // Afficher un indicateur de chargement
+        showLoadingIndicator();
+        
+        const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+        const postData = {
+            qr_data: method === 'qrcode' ? data : JSON.stringify({
+                matricule: data,
+                timestamp: new Date().toISOString(),
+                source: 'manuel'
+            }),
+            scan_method: method
+        };
+        
+        console.log('Envoi des données:', postData);
+        
+        $.ajax({
+            url: scanUrl,
+            type: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            data: JSON.stringify(postData),
+            success: function(response) {
+                hideLoadingIndicator();
+                showScanResult(response);
+                
+                // Recharger la page après succès
+                if (response.success && response.autorise) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                }
+            },
+            error: function(xhr, status, error) {
+                hideLoadingIndicator();
+                
+                console.error('Erreur AJAX:', xhr);
+                
+                let errorMessage = 'Erreur lors du scan';
+                
+                if (xhr.status === 400) {
+                    const response = xhr.responseJSON;
+                    if (response && response.error) {
+                        errorMessage = response.error;
+                    } else if (response && response.message) {
+                        errorMessage = response.message;
+                    }
+                } else if (xhr.status === 403) {
+                    errorMessage = 'Permission refusée';
+                } else if (xhr.status === 404) {
+                    errorMessage = 'Étudiant non trouvé';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Erreur serveur. Veuillez réessayer.';
+                }
+                
+                showErrorResult(errorMessage);
+                
+                // Rediriger si non authentifié
+                if (xhr.status === 401) {
+                    setTimeout(() => {
+                        window.location.href = '/login/';
+                    }, 2000);
+                }
+            }
+        });
+    }
+    
+    function showScanResult(result) {
+        const resultDiv = $('#scan-result');
+        
+        if (result.autorise) {
+            // Succès
+            resultDiv.html(`
+                <div class="scan-result-success">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle text-success" style="font-size: 3rem;"></i>
+                        </div>
+                        <div class="col">
+                            <h4 class="text-success">ACCÈS AUTORISÉ</h4>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <p class="lead mb-1">${result.etudiant.nom} ${result.etudiant.prenom}</p>
+                                    <p class="text-muted mb-0">Matricule: ${result.etudiant.matricule}</p>
+                                    ${result.etudiant.filiere ? `<p class="text-muted mb-0">Filière: ${result.etudiant.filiere}</p>` : ''}
+                                </div>
+                            </div>
+                            <div class="mt-3 alert alert-success">
+                                <i class="fas fa-clock me-1"></i>
+                                Scan enregistré à ${new Date().toLocaleTimeString()}
+                            </div>
+                            <p class="text-muted small mt-3">Rafraîchissement automatique...</p>
+                        </div>
+                    </div>
+                </div>
+            `);
+            
+            playSuccessSound();
+            
+        } else {
+            // Refusé
+            let etudiantInfo = '';
+            if (result.etudiant) {
+                etudiantInfo = `
+                    <div class="mt-2">
+                        <strong>${result.etudiant.nom} ${result.etudiant.prenom}</strong><br>
+                        <small class="text-muted">Matricule: ${result.etudiant.matricule}</small>
+                    </div>
+                `;
+            }
+            
+            resultDiv.html(`
+                <div class="scan-result-error">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <i class="fas fa-times-circle text-danger" style="font-size: 3rem;"></i>
+                        </div>
+                        <div class="col">
+                            <h4 class="text-danger">ACCÈS REFUSÉ</h4>
+                            ${etudiantInfo}
+                            <div class="alert alert-danger mt-2">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                <strong>Raison:</strong> ${result.message || result.raison || 'Non spécifiée'}
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm mt-2" onclick="$('#scan-result').hide()">
+                                <i class="fas fa-times me-1"></i>Fermer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `);
+            
+            playErrorSound();
+        }
+        
+        resultDiv.slideDown();
+        
+        // Masquer après 8 secondes (sauf succès où on recharge)
+        if (!result.autorise) {
+            setTimeout(() => {
+                resultDiv.slideUp();
+            }, 8000);
+        }
+    }
+    
+    function showErrorResult(message) {
+        $('#scan-result').html(`
+            <div class="scan-result-warning">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                    </div>
+                    <div class="col">
+                        <h4 class="text-warning">ERREUR</h4>
+                        <p class="mb-0">${message}</p>
+                    </div>
+                </div>
+            </div>
+        `).slideDown();
+        
+        setTimeout(() => {
+            $('#scan-result').slideUp();
+        }, 5000);
+    }
+    
+    function showLoadingIndicator() {
+        // Afficher un spinner dans le bouton de scan manuel
+        $('#scan-manuel').html('<i class="fas fa-spinner fa-spin"></i> Vérification...');
+        $('#scan-manuel').prop('disabled', true);
+        
+        // Si le scanner est actif, ajouter un overlay
+        if ($('#stop-scanner').is(':visible')) {
+            $('#reader').append(`
+                <div id="scan-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                    <div class="spinner-border text-light" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                </div>
+            `);
+        }
+    }
+    
+    function hideLoadingIndicator() {
+        // Restaurer le bouton de scan manuel
+        $('#scan-manuel').html('<i class="fas fa-check"></i> Valider');
+        $('#scan-manuel').prop('disabled', false);
+        
+        // Retirer l'overlay
+        $('#scan-overlay').remove();
+    }
+    
+    function playSuccessSound() {
+        try {
+            const audio = new Audio('{% static "sounds/success.mp3" %}');
+            audio.play().catch(e => console.log('Audio play failed:', e));
+        } catch (e) {
+            console.log('Sound error:', e);
+        }
+    }
+    
+    function playErrorSound() {
+        try {
+            const audio = new Audio('{% static "sounds/error.mp3" %}');
+            audio.play().catch(e => console.log('Audio play failed:', e));
+        } catch (e) {
+            console.log('Sound error:', e);
+        }
+    }
+    
+    function showToast(type, message) {
+        // Créer le toast
+        const toastId = 'toast-' + Date.now();
+        const toast = $(`
+            <div id="${toastId}" class="toast align-items-center text-bg-${type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        `);
+        
+        // Ajouter au conteneur s'il n'existe pas
+        if ($('.toast-container').length === 0) {
+            $('body').append(`
+                <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;"></div>
+            `);
+        }
+        
+        // Ajouter et afficher
+        $('.toast-container').append(toast);
+        const bsToast = new bootstrap.Toast(toast[0], { delay: 3000 });
+        bsToast.show();
+        
+        // Nettoyer après la fermeture
+        toast.on('hidden.bs.toast', function() {
+            $(this).remove();
+        });
+    }
+    
+    // Raccourcis clavier globaux
+    $(document).keydown(function(e) {
+        // F2 pour démarrer/arrêter le scanner
+        if (e.key === 'F2') {
+            e.preventDefault();
+            if ($('#start-scanner').is(':visible')) {
+                $('#start-scanner').click();
+            } else {
+                $('#stop-scanner').click();
+            }
+        }
+        
+        // Échap pour arrêter le scanner
+        if (e.key === 'Escape' && $('#stop-scanner').is(':visible')) {
+            $('#stop-scanner').click();
+        }
+    });
+</script>
+{% endblock %}

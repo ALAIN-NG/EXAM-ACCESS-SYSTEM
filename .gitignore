@@ -179,7 +179,7 @@ Desktop.ini
 /static_root/
 /logs/
 *.db
-*.sqlite3
+# *.sqlite3
 
 # Django migrations (sauf les fichiers init)
 */migrations/*.py

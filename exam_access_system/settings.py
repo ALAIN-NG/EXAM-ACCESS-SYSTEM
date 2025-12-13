@@ -107,13 +107,20 @@ WSGI_APPLICATION = 'exam_access_system.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': config('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': config('DB_NAME', default=BASE_DIR / 'db.sqlite3'),
-        'USER': config('DB_USER', default=''),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default=''),
-        'PORT': config('DB_PORT', default=''),
+        'NAME': config('DB_NAME', default=str(BASE_DIR / 'db.sqlite3')),
     }
 }
+
+if 'RENDER' in os.environ:
+    DATABASES['default']['NAME'] = 'db.sqlite3'
+    
+    # Désactiver les vérifications de connexion pool
+    DATABASES['default'].update({
+        'CONN_MAX_AGE': 0,
+        'OPTIONS': {
+            'timeout': 20,
+        }
+    })
 
 # Cache configuration (pour améliorer les performances)
 CACHES = {
