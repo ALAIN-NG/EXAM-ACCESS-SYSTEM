@@ -36,6 +36,7 @@ pythonenv/
 UE.csv
 ETUDIANTS.csv
 FILIERES.csv
+populate_initial_data.py
 
 # Fichiers de configuration locale avec secrets
 *.local.py
