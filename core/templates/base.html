@@ -3,7 +3,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=0.9">
+    <!-- IMPORTANT: Mettre initial-scale=1 pour mobile -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self';
         img-src 'self' data:;
@@ -18,7 +19,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Custom CSS -->
     
     <style>
         :root {
@@ -35,8 +35,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f7fa;
             color: #333;
+            overflow-x: hidden;
         }
         
+        /* Styles PC (inchangés) */
         .navbar-brand {
             font-weight: 700;
             color: white !important;
@@ -127,14 +129,262 @@
             animation: fadeIn 0.5s ease-out;
         }
         
-        /* Responsive */
+        /* =========================================== */
+        /* AMÉLIORATIONS MOBILE SEULEMENT (max-width: 768px) */
+        /* =========================================== */
+        
         @media (max-width: 768px) {
-            .sidebar {
-                min-height: auto;
+            /* Navbar mobile */
+            .navbar-brand {
+                font-size: 1.1rem;
+                max-width: 200px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            
+            .navbar-toggler {
+                padding: 0.25rem 0.5rem;
+            }
+            
+            /* Cacher le sidebar sur mobile et le remplacer par un menu burger */
+            .sidebar.d-none.d-md-block {
+                display: none !important;
+            }
+            
+            /* Menu mobile (hamburger) */
+            .mobile-sidebar {
+                position: fixed;
+                top: 56px;
+                left: -280px;
+                width: 280px;
+                height: calc(100vh - 56px);
+                background-color: var(--primary-color);
+                color: white;
+                z-index: 1050;
+                transition: left 0.3s ease;
+                overflow-y: auto;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            }
+            
+            .mobile-sidebar.active {
+                left: 0;
+            }
+            
+            .mobile-sidebar .sidebar-content {
+                padding: 20px;
+            }
+            
+            .mobile-sidebar a {
+                color: rgba(255, 255, 255, 0.8);
+                text-decoration: none;
+                padding: 12px 15px;
+                display: block;
+                border-radius: 5px;
+                margin-bottom: 8px;
+                font-size: 0.95rem;
+            }
+            
+            .mobile-sidebar a:hover, .mobile-sidebar a.active {
+                background-color: rgba(255, 255, 255, 0.1);
+                color: white;
+            }
+            
+            /* Overlay pour mobile */
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                top: 56px;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0,0,0,0.5);
+                z-index: 1049;
+            }
+            
+            .sidebar-overlay.active {
+                display: block;
+            }
+            
+            /* Ajustement du contenu principal pour mobile */
+            .container-fluid {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+            
+            .col-lg-10.col-md-9 {
+                width: 100% !important;
+                padding: 1rem !important;
+            }
+            
+            .col-12.p-4 {
+                padding: 1rem !important;
+            }
+            
+            /* Cartes responsive */
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
             }
             
             .stat-card {
                 margin-bottom: 20px;
+            }
+            
+            /* Boutons mobile */
+            .btn {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+            
+            .btn-group .btn {
+                margin-bottom: 0.25rem;
+            }
+            
+            /* Tables responsive avec scroll horizontal */
+            .table-responsive {
+                margin: 0 -0.75rem;
+                padding: 0 0.75rem;
+                border-radius: 0;
+            }
+            
+            .table {
+                font-size: 0.85rem;
+                margin-bottom: 1rem;
+            }
+            
+            .table th, .table td {
+                padding: 0.5rem;
+                white-space: nowrap;
+            }
+            
+            /* Typographie mobile */
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 1rem !important;
+            }
+            
+            h3 {
+                font-size: 1.25rem;
+            }
+            
+            /* Badges plus petits */
+            .badge {
+                font-size: 0.75rem;
+                padding: 0.25em 0.6em;
+            }
+            
+            /* Footer mobile */
+            .footer {
+                padding: 1rem 0;
+                margin-top: 2rem;
+            }
+            
+            .footer .row {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer .col-md-6 {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+            
+            .footer .col-md-6.text-end {
+                text-align: center !important;
+            }
+            
+            /* Messages d'alerte */
+            .alert {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            /* Formulaire mobile */
+            .form-control, .form-select {
+                font-size: 16px; /* Empêche le zoom sur iOS */
+                padding: 0.5rem 0.75rem;
+            }
+            
+            /* Bouton menu mobile flottant */
+            .mobile-menu-btn {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background-color: var(--secondary-color);
+                color: white;
+                border: none;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Améliorations pour les petits écrans */
+            @media (max-width: 576px) {
+                .navbar-brand {
+                    max-width: 150px;
+                    font-size: 1rem;
+                }
+                
+                .mobile-sidebar {
+                    width: 85%;
+                    left: -85%;
+                }
+                
+                .card {
+                    border-radius: 8px;
+                }
+                
+                .table-responsive {
+                    margin: 0 -0.5rem;
+                    padding: 0 0.5rem;
+                }
+                
+                .btn-group-sm .btn {
+                    padding: 0.25rem 0.5rem;
+                    font-size: 0.8rem;
+                }
+            }
+            
+            /* Scrollbar pour mobile */
+            .mobile-sidebar::-webkit-scrollbar {
+                width: 4px;
+            }
+            
+            .mobile-sidebar::-webkit-scrollbar-thumb {
+                background: rgba(255,255,255,0.3);
+                border-radius: 2px;
+            }
+        }
+        
+        /* =========================================== */
+        /* STYLES DESKTOP (min-width: 769px) */
+        /* =========================================== */
+        @media (min-width: 769px) {
+            /* Cacher les éléments mobiles sur desktop */
+            .mobile-sidebar,
+            .sidebar-overlay,
+            .mobile-menu-btn {
+                display: none !important;
+            }
+            
+            /* Conserver l'affichage original du sidebar */
+            .sidebar.d-none.d-md-block {
+                display: block !important;
             }
         }
     </style>
@@ -149,7 +399,8 @@
                 <i class="fas fa-graduation-cap"></i> SG Examens
             </a>
             
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <!-- Bouton hamburger seulement pour mobile -->
+            <button class="navbar-toggler d-md-none" type="button" id="mobileMenuToggle">
                 <span class="navbar-toggler-icon"></span>
             </button>
             
@@ -158,9 +409,11 @@
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user-circle"></i> {{ user.get_full_name|default:user.username }}
+                                <i class="fas fa-user-circle"></i> 
+                                <!-- Nom complet sur desktop, icône seule sur mobile -->
+                                <span class="d-none d-md-inline">{{ user.get_full_name|default:user.username }}</span>
                             </a>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="fas fa-user"></i> Mon profil</a></li>
                                 <li><a class="dropdown-item" href="{% url 'change_password' %}"><i class="fas fa-key"></i> Changer mot de passe</a></li>
                                 <li><hr class="dropdown-divider"></li>
@@ -174,7 +427,10 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i> Connexion</a>
+                            <a class="nav-link" href="{% url 'login' %}">
+                                <i class="fas fa-sign-in-alt"></i> 
+                                <span class="d-none d-md-inline">Connexion</span>
+                            </a>
                         </li>
                     {% endif %}
                 </ul>
@@ -182,9 +438,63 @@
         </div>
     </nav>
     
+    <!-- Overlay pour fermer le sidebar mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- Sidebar mobile (caché par défaut) -->
+    {% if user.is_authenticated %}
+    <div class="mobile-sidebar d-md-none" id="mobileSidebar">
+        <div class="sidebar-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0"><i class="fas fa-bars"></i> Menu</h5>
+                <button class="btn btn-sm btn-outline-light" id="closeMobileSidebar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <a href="{% url 'dashboard' %}" class="{% if request.path == '/dashboard/' %}active{% endif %}">
+                <i class="fas fa-tachometer-alt"></i> Tableau de bord
+            </a>
+            
+            {% if user.is_staff or user.groups.all.0.name == 'Administrateur' %}
+            <a href="{% url 'admin:index' %}" target="_blank">
+                <i class="fas fa-cog"></i> Administration
+            </a>
+            {% endif %}
+            
+            {% if user.groups.all.0.name == 'Surveillant' or user.is_staff %}
+            <a href="{% url 'scan_interface' %}">
+                <i class="fas fa-qrcode"></i> Scanner étudiants
+            </a>
+            {% endif %}
+            
+            <a href="{% url 'examen_list' %}">
+                <i class="fas fa-calendar-alt"></i> Examens
+            </a>
+            
+            {% if user.groups.all.0.name == 'Etudiant' %}
+            <a href="{% url 'student_dashboard' %}">
+                <i class="fas fa-user-graduate"></i> Mon espace
+            </a>
+            {% endif %}
+            
+            <a href="{% url 'documentation' %}">
+                <i class="fas fa-book"></i> Documentation
+            </a>
+            
+            <hr>
+            
+            <div class="mt-4">
+                <small class="text-muted">Version 1.0.0</small><br>
+                <small class="text-muted">© {% now "Y" %} Université</small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
+            <!-- Sidebar PC (inchangé) -->
             {% if user.is_authenticated %}
             <div class="col-lg-2 col-md-3 sidebar d-none d-md-block">
                 <div class="p-3">
@@ -258,6 +568,13 @@
         </div>
     </div>
     
+    <!-- Bouton menu mobile flottant -->
+    {% if user.is_authenticated %}
+    <button class="mobile-menu-btn d-md-none" id="mobileMenuButton">
+        <i class="fas fa-bars"></i>
+    </button>
+    {% endif %}
+    
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -280,10 +597,41 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     
-    <!-- Custom JavaScript -->
+    <!-- Custom JavaScript pour mobile -->
     <script>
-        // Auto-dismiss alerts after 5 seconds
         $(document).ready(function() {
+            // Fonction pour basculer le sidebar mobile
+            function toggleMobileSidebar() {
+                $('#mobileSidebar').toggleClass('active');
+                $('#sidebarOverlay').toggleClass('active');
+                $('body').toggleClass('sidebar-open');
+            }
+            
+            // Ouvrir le sidebar mobile
+            $('#mobileMenuToggle, #mobileMenuButton').on('click', function(e) {
+                e.stopPropagation();
+                toggleMobileSidebar();
+            });
+            
+            // Fermer le sidebar mobile
+            $('#closeMobileSidebar, #sidebarOverlay').on('click', function() {
+                toggleMobileSidebar();
+            });
+            
+            // Fermer en cliquant à l'extérieur
+            $(document).on('click', function(e) {
+                if ($('#mobileSidebar').hasClass('active') && 
+                    !$(e.target).closest('#mobileSidebar, #mobileMenuToggle, #mobileMenuButton').length) {
+                    toggleMobileSidebar();
+                }
+            });
+            
+            // Empêcher la fermeture quand on clique dans le sidebar
+            $('#mobileSidebar').on('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Auto-dismiss alerts after 5 seconds
             setTimeout(function() {
                 $('.alert').alert('close');
             }, 5000);
@@ -300,6 +648,15 @@
                     e.preventDefault();
                 }
             });
+            
+            // Désactiver le zoom sur mobile pour les inputs
+            if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                $('input, select, textarea').on('focus', function() {
+                    $(this).css('font-size', '16px');
+                }).on('blur', function() {
+                    $(this).css('font-size', '');
+                });
+            }
         });
     </script>
     

@@ -106,6 +106,8 @@
                                     {% elif examen.date == today %}
                                         {% if examen.est_en_cours %}
                                         <span class="badge bg-success">En cours</span>
+                                        {% elif examen.est_termine %}
+                                        <span class="badge bg-secondary">Terminer</span>
                                         {% else %}
                                         <span class="badge bg-warning">Aujourd'hui</span>
                                         {% endif %}

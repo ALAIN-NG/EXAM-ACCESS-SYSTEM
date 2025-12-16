@@ -414,6 +414,42 @@ class Examen(models.Model):
     def __str__(self):
         return f"Examen {self.ue} - {self.date} ({self.type_examen})"
     
+
+    @property
+    def statut(self):
+        """Retourne le statut actuel de l'examen."""
+        maintenant = timezone.localtime(timezone.now())
+        date_actuelle = maintenant.date()
+        heure_actuelle = maintenant.time()
+        
+        # Si la date est passée
+        if self.date < date_actuelle:
+            return 'termine'
+        
+        # Si la date est future
+        if self.date > date_actuelle:
+            return 'a_venir'
+        
+        # Si c'est aujourd'hui
+        if self.heure_fin < heure_actuelle:
+            return 'termine'
+        elif self.heure_debut <= heure_actuelle <= self.heure_fin:
+            return 'en_cours'
+        else:
+            return 'a_venir'
+    
+    @property
+    def est_termine(self):
+        return self.statut == 'termine'
+    
+    @property
+    def est_en_cours(self):
+        return self.statut == 'en_cours'
+    
+    @property
+    def est_a_venir(self):
+        return self.statut == 'a_venir'
+    
     class Meta:
         verbose_name = "Examen"
         verbose_name_plural = "Examens"
