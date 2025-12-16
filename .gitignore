@@ -32,6 +32,10 @@ pythonenv/
 .env.development
 .env.test
 
+UE.csv
+ETUDIANTS.csv
+FILIERES.csv
+
 # Fichiers de configuration locale avec secrets
 *.local.py
 secrets.py
