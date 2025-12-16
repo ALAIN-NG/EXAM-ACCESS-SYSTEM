@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from .models import Etudiant
 from .models import JustificatifAbsence
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class StudentLoginForm(forms.Form):
@@ -257,3 +258,37 @@ class UniversalLoginForm(forms.Form):
         widget=forms.Select(attrs={'class': 'form-control'}),
         required=False
     )
+
+
+
+class UserProfileForm(forms.ModelForm):
+    """Formulaire pour la mise à jour du profil utilisateur"""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'username']
+        labels = {
+            'first_name': 'Prénom',
+            'last_name': 'Nom',
+            'email': 'Adresse email',
+            'username': "Nom d'utilisateur",
+        }
+        help_texts = {
+            'username': 'Requis. 150 caractères maximum. Lettres, chiffres et @/./+/-/_ uniquement.',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ajouter des classes Bootstrap aux champs
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({
+                'class': 'form-control',
+                'placeholder': f'Entrez votre {self.Meta.labels.get(field_name, field_name)}'
+            })
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            # Vérifier si l'email existe déjà pour un autre utilisateur
+            if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+                raise ValidationError('Cette adresse email est déjà utilisée.')
+        return email

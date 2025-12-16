@@ -1,0 +1,371 @@
+{% extends "base_dashboard.html" %}
+{% load static %}
+
+{% block title %}Mon Profil - SG Examens{% endblock %}
+
+{% block page_title %}Mon Profil{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Mon profil</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 col-md-10 mx-auto">
+        <!-- Carte d'information du compte -->
+        <div class="card mb-4 fade-in">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-circle me-2"></i>Informations du compte</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Nom d'utilisateur:</div>
+                    <div class="col-md-9">{{ user.username }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Date d'inscription:</div>
+                    <div class="col-md-9">{{ user.date_joined|date:"d/m/Y H:i" }}</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-3 fw-bold">Dernière connexion:</div>
+                    <div class="col-md-9">{{ user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 fw-bold">Groupes:</div>
+                    <div class="col-md-9">
+                        {% for group in user.groups.all %}
+                        <span class="badge bg-info me-1">{{ group.name }}</span>
+                        {% empty %}
+                        <span class="text-muted">Aucun groupe assigné</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations étudiant (si applicable) -->
+        {% if etudiant %}
+        <div class="card mb-4 fade-in">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-user-graduate me-2"></i>Informations étudiant</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="fw-bold">Matricule:</div>
+                        <div>{{ etudiant.matricule }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="fw-bold">Filière:</div>
+                        <div>{{ etudiant.filiere.nom|default:"Non définie" }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="fw-bold">Niveau:</div>
+                        <div>{{ etudiant.niveau|default:"Non défini" }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="fw-bold">Date de naissance:</div>
+                        <div>{{ etudiant.date_naissance|date:"d/m/Y"|default:"Non définie" }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="fw-bold">Lieu de naissance:</div>
+                        <div>{{ etudiant.lieu_naissance|default:"Non défini" }}</div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="fw-bold">Téléphone:</div>
+                        <div>{{ etudiant.telephone|default:"Non défini" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Formulaire de mise à jour du profil -->
+        <div class="card mb-4 fade-in">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Modifier mes informations</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="profileForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="update_profile" value="true">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ user_form.first_name.id_for_label }}" class="form-label">
+                                {{ user_form.first_name.label }}
+                            </label>
+                            {{ user_form.first_name }}
+                            {% if user_form.first_name.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ user_form.first_name.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ user_form.last_name.id_for_label }}" class="form-label">
+                                {{ user_form.last_name.label }}
+                            </label>
+                            {{ user_form.last_name }}
+                            {% if user_form.last_name.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ user_form.last_name.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ user_form.username.id_for_label }}" class="form-label">
+                                {{ user_form.username.label }}
+                            </label>
+                            {{ user_form.username }}
+                            <div class="form-text">{{ user_form.username.help_text }}</div>
+                            {% if user_form.username.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ user_form.username.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ user_form.email.id_for_label }}" class="form-label">
+                                {{ user_form.email.label }}
+                            </label>
+                            {{ user_form.email }}
+                            {% if user_form.email.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ user_form.email.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Enregistrer les modifications
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Formulaire de changement de mot de passe -->
+        <div class="card fade-in">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-key me-2"></i>Changer mon mot de passe</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="passwordForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="update_password" value="true">
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ password_form.old_password.id_for_label }}" class="form-label">
+                                {{ password_form.old_password.label }}
+                            </label>
+                            {{ password_form.old_password }}
+                            {% if password_form.old_password.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ password_form.old_password.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ password_form.new_password1.id_for_label }}" class="form-label">
+                                {{ password_form.new_password1.label }}
+                            </label>
+                            {{ password_form.new_password1 }}
+                            {% if password_form.new_password1.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ password_form.new_password1.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                            {% if password_form.new_password1.help_text %}
+                            <div class="form-text">
+                                {{ password_form.new_password1.help_text|safe }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ password_form.new_password2.id_for_label }}" class="form-label">
+                                {{ password_form.new_password2.label }}
+                            </label>
+                            {{ password_form.new_password2 }}
+                            {% if password_form.new_password2.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ password_form.new_password2.errors|join:", " }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-sync-alt me-1"></i> Changer le mot de passe
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Style CSS additionnel pour la page profil -->
+<style>
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .card-header {
+        border-bottom: none;
+        font-weight: 600;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .form-control, .form-select {
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        padding: 0.5rem 0.75rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+    }
+    
+    .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.7em;
+    }
+    
+    /* Animation pour les cartes */
+    .fade-in {
+        animation: fadeInUp 0.5s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .card-body .row > div {
+            margin-bottom: 1rem;
+        }
+        
+        .card-body .row > div:last-child {
+            margin-bottom: 0;
+        }
+        
+        .text-end {
+            text-align: center !important;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+
+<!-- JavaScript pour la validation -->
+<script>
+    $(document).ready(function() {
+        // Ajouter des classes Bootstrap aux champs des formulaires
+        $('#profileForm input, #profileForm select').addClass('form-control');
+        $('#passwordForm input').addClass('form-control');
+        
+        // Validation en temps réel
+        $('#profileForm').on('submit', function(e) {
+            let isValid = true;
+            
+            // Vérifier les champs requis
+            $(this).find('input[required]').each(function() {
+                if (!$(this).val().trim()) {
+                    isValid = false;
+                    $(this).addClass('is-invalid');
+                } else {
+                    $(this).removeClass('is-invalid');
+                }
+            });
+            
+            // Vérifier l'email
+            const email = $('#id_email').val();
+            if (email && !isValidEmail(email)) {
+                isValid = false;
+                $('#id_email').addClass('is-invalid');
+            } else {
+                $('#id_email').removeClass('is-invalid');
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                showToast('Veuillez corriger les erreurs dans le formulaire.', 'error');
+            }
+        });
+        
+        // Fonction pour valider l'email
+        function isValidEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+        
+        // Fonction pour afficher un toast
+        function showToast(message, type = 'info') {
+            const toast = $(`<div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : 'success'} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>`);
+            
+            $('.toast-container').remove();
+            $('body').append('<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>');
+            $('.toast-container').append(toast);
+            
+            const bsToast = new bootstrap.Toast(toast[0]);
+            bsToast.show();
+        }
+        
+        // Confirmation avant de soumettre le changement de mot de passe
+        $('#passwordForm').on('submit', function(e) {
+            if (!confirm('Êtes-vous sûr de vouloir changer votre mot de passe ?')) {
+                e.preventDefault();
+                return false;
+            }
+        });
+    });
+</script>
+{% endblock %}

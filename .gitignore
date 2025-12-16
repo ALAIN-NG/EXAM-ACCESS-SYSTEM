@@ -32,6 +32,7 @@ pythonenv/
 .env.development
 .env.test
 
+*.csv
 UE.csv
 ETUDIANTS.csv
 FILIERES.csv

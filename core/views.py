@@ -25,7 +25,7 @@ from django.contrib.auth import login
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_protect
 from .forms import StudentLoginForm
-from .forms import JustificatifForm
+from .forms import JustificatifForm, UserProfileForm
 from datetime import timedelta
 
 from .models import (
@@ -1529,9 +1529,227 @@ def generate_qr_code_api(request):
     })
 
 
+
+@login_required
 def documentation_view(request):
-    """Page de documentation - MANQUANTE"""
-    return render(request, 'core/documentation.html')
+    """Page de documentation complète de l'application"""
+    
+    # Structure de la documentation
+    documentation_sections = [
+        {
+            'id': 'introduction',
+            'title': 'Introduction',
+            'icon': 'fas fa-info-circle',
+            'color': 'primary',
+            'content': [
+                {
+                    'type': 'paragraph',
+                    'text': 'Le Système de Gestion des Examens (SGE) est une plateforme sécurisée conçue pour faciliter l\'organisation et le contrôle des examens universitaires.'
+                },
+                {
+                    'type': 'paragraph',
+                    'text': 'Cette application permet la gestion complète du processus d\'examen, de l\'inscription des étudiants au contrôle d\'accès en salle.'
+                },
+                {
+                    'type': 'features',
+                    'items': [
+                        'Gestion des étudiants et des programmes',
+                        'Planification des examens et des salles',
+                        'Assignation des surveillants',
+                        'Contrôle d\'accès par QR Code',
+                        'Suivi en temps réel',
+                        'Rapports et statistiques'
+                    ]
+                }
+            ]
+        },
+        {
+            'id': 'user-roles',
+            'title': 'Rôles Utilisateurs',
+            'icon': 'fas fa-users',
+            'color': 'success',
+            'content': [
+                {
+                    'type': 'role',
+                    'title': 'Administrateur',
+                    'description': 'Accès complet à toutes les fonctionnalités du système',
+                    'permissions': [
+                        'Gestion des utilisateurs et des permissions',
+                        'Configuration du système',
+                        'Visualisation de toutes les données',
+                        'Génération de rapports'
+                    ]
+                },
+                {
+                    'type': 'role',
+                    'title': 'Surveillant',
+                    'description': 'Gestion des examens et contrôle d\'accès',
+                    'permissions': [
+                        'Scanner les QR Codes des étudiants',
+                        'Vérifier les listes d\'examen',
+                        'Marquer les présences/absences',
+                        'Consulter les horaires d\'examen'
+                    ]
+                },
+                {
+                    'type': 'role',
+                    'title': 'Étudiant',
+                    'description': 'Accès aux informations personnelles et examens',
+                    'permissions': [
+                        'Consulter son emploi du temps',
+                        'Vérifier son statut d\'inscription',
+                        'Générer son QR Code d\'accès',
+                        'Consulter les résultats'
+                    ]
+                }
+            ]
+        },
+        {
+            'id': 'exams-management',
+            'title': 'Gestion des Examens',
+            'icon': 'fas fa-calendar-alt',
+            'color': 'warning',
+            'content': [
+                {
+                    'type': 'section',
+                    'title': 'Création d\'un examen',
+                    'description': 'Pour créer un nouvel examen :',
+                    'steps': [
+                        'Accédez à la section "Examens"',
+                        'Cliquez sur "Nouvel Examen"',
+                        'Remplissez les informations (UE, date, heure, salle)',
+                        'Assignez un surveillant si nécessaire',
+                        'Validez la création'
+                    ]
+                },
+                {
+                    'type': 'section',
+                    'title': 'Modification d\'un examen',
+                    'description': 'Modifiez un examen existant :',
+                    'steps': [
+                        'Dans la liste des examens, cliquez sur l\'examen',
+                        'Utilisez le bouton "Modifier"',
+                        'Apportez les modifications nécessaires',
+                        'Enregistrez les changements'
+                    ]
+                },
+                {
+                    'type': 'note',
+                    'text': 'Les modifications affectent automatiquement les étudiants inscrits à l\'UE concernée.'
+                }
+            ]
+        },
+        {
+            'id': 'scan-system',
+            'title': 'Système de Scan',
+            'icon': 'fas fa-qrcode',
+            'color': 'info',
+            'content': [
+                {
+                    'type': 'section',
+                    'title': 'Processus de scan',
+                    'description': 'Comment scanner les étudiants :',
+                    'steps': [
+                        'Connectez-vous en tant que surveillant',
+                        'Accédez à "Scanner étudiants"',
+                        'Sélectionnez l\'examen en cours',
+                        'Utilisez la caméra pour scanner les QR Codes',
+                        'Le système valide automatiquement l\'accès'
+                    ]
+                },
+                {
+                    'type': 'alert',
+                    'level': 'warning',
+                    'text': 'Seuls les surveillants assignés peuvent scanner pour un examen donné.'
+                },
+                {
+                    'type': 'alert',
+                    'level': 'info',
+                    'text': 'Les scans sont enregistrés en temps réel avec horodatage.'
+                }
+            ]
+        },
+        {
+            'id': 'faq',
+            'title': 'FAQ - Questions Fréquentes',
+            'icon': 'fas fa-question-circle',
+            'color': 'secondary',
+            'content': [
+                {
+                    'type': 'faq',
+                    'question': 'Comment récupérer mon mot de passe oublié ?',
+                    'answer': 'Contactez l\'administrateur système pour réinitialiser votre mot de passe.'
+                },
+                {
+                    'type': 'faq',
+                    'question': 'Mon QR Code ne fonctionne pas, que faire ?',
+                    'answer': 'Vérifiez que vous êtes bien inscrit à l\'examen. Si le problème persiste, contactez le secrétariat.'
+                },
+                {
+                    'type': 'faq',
+                    'question': 'Comment savoir si je suis autorisé à passer un examen ?',
+                    'answer': 'Consultez votre espace étudiant. Les examens autorisés apparaissent avec un QR Code valide.'
+                },
+                {
+                    'type': 'faq',
+                    'question': 'Que faire en cas d\'erreur de scan ?',
+                    'answer': 'Le surveillant peut saisir manuellement votre matricule pour vérifier votre accès.'
+                },
+                {
+                    'type': 'faq',
+                    'question': 'Comment consulter mes anciens examens ?',
+                    'answer': 'Dans votre espace étudiant, accédez à "Historique des examens".'
+                }
+            ]
+        },
+        {
+            'id': 'support',
+            'title': 'Support Technique',
+            'icon': 'fas fa-headset',
+            'color': 'danger',
+            'content': [
+                {
+                    'type': 'contact',
+                    'title': 'Contacts',
+                    'items': [
+                        {'icon': 'fas fa-phone', 'text': 'Support technique : +237 699 282 479'},
+                        {'icon': 'fas fa-envelope', 'text': 'Email : alain.ng.tech@gmail.com'},
+                        {'icon': 'fas fa-clock', 'text': 'Horaires : Lundi - Vendredi, 8h - 17h'},
+                        {'icon': 'fas fa-map-marker-alt', 'text': "Localisation : UY1, FS, Departement D'Informatique"}
+                    ]
+                },
+                {
+                    'type': 'alert',
+                    'level': 'info',
+                    'text': 'Pour une assistance urgente, appelez le numéro de support.'
+                },
+                {
+                    'type': 'alert',
+                    'level': 'success',
+                    'text': 'Les problèmes techniques sont généralement résolus dans les 24 heures ouvrables.'
+                }
+            ]
+        }
+    ]
+    
+    # Récupérer le rôle de l'utilisateur pour personnaliser la documentation
+    user_role = 'Visiteur'
+    if request.user.is_authenticated:
+        if request.user.is_staff:
+            user_role = 'Administrateur'
+        elif request.user.groups.filter(name='Surveillant').exists():
+            user_role = 'Surveillant'
+        elif request.user.groups.filter(name='Etudiant').exists():
+            user_role = 'Étudiant'
+    
+    context = {
+        'documentation_sections': documentation_sections,
+        'user_role': user_role,
+        'app_version': '1.0.0',
+        'last_updated': '16-12-2025'
+    }
+    
+    return render(request, 'core/documentation.html', context)
 
 
 # ========================================================
@@ -1593,13 +1811,42 @@ def dashboard_view(request):
 
 @login_required
 def profile_view(request):
-    """Page de profil utilisateur - EXISTANTE"""
-    context = {
-        'user': request.user,
-    }
+    """Page de profil utilisateur avec édition"""
+    user = request.user
+    etudiant = None
     
-    if hasattr(request.user, 'etudiant_profile'):
-        context['etudiant'] = request.user.etudiant_profile
+    # Récupérer le profil étudiant si existe
+    try:
+        etudiant = Etudiant.objects.get(user=user)
+    except Etudiant.DoesNotExist:
+        etudiant = None
+    
+    if request.method == 'POST':
+        # Déterminer quel formulaire est soumis
+        if 'update_profile' in request.POST:
+            user_form = UserProfileForm(request.POST, instance=user)
+            
+            if user_form.is_valid():
+                user_form.save()
+                messages.success(request, 'Votre profil a été mis à jour avec succès!')
+                return redirect('profile')
+        elif 'update_password' in request.POST:
+            password_form = PasswordChangeForm(user, request.POST)
+            
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)  # Garder l'utilisateur connecté
+                messages.success(request, 'Votre mot de passe a été changé avec succès!')
+                return redirect('profile')
+    else:
+        user_form = UserProfileForm(instance=user)
+        password_form = PasswordChangeForm(user)
+    
+    context = {
+        'user_form': user_form,
+        'password_form': password_form,
+        'etudiant': etudiant,
+    }
     
     return render(request, 'core/profile.html', context)
 

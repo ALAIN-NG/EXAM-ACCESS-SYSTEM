@@ -1,0 +1,574 @@
+<!-- templates/core/documentation.html -->
+{% extends 'base.html' %}
+
+{% block title %}Documentation - SG Examens{% endblock %}
+
+{% block page_title %}Documentation du Système{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Documentation</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar de navigation -->
+    <div class="col-lg-3 col-md-4 mb-4">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-book me-2"></i>Navigation</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for section in documentation_sections %}
+                    <a href="#{{ section.id }}" class="list-group-item list-group-item-action border-0">
+                        <i class="{{ section.icon }} me-2 text-{{ section.color }}"></i>
+                        {{ section.title }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer bg-light">
+                <small class="text-muted">
+                    <i class="fas fa-user-circle me-1"></i>
+                    Rôle : {{ user_role }}<br>
+                    <i class="fas fa-code-branch me-1"></i>
+                    Version : {{ app_version }}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Contenu principal de la documentation -->
+    <div class="col-lg-9 col-md-8">
+        <!-- En-tête -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <h1 class="display-6 text-primary mb-3">
+                    <i class="fas fa-graduation-cap me-2"></i>Système de Gestion des Examens
+                </h1>
+                <p class="lead mb-0">
+                    Documentation complète de l'application
+                </p>
+                <hr class="my-3">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-shield-alt fa-2x text-success me-3"></i>
+                            <div>
+                                <h5 class="mb-0">Sécurisé</h5>
+                                <small>Accès contrôlé</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-bolt fa-2x text-warning me-3"></i>
+                            <div>
+                                <h5 class="mb-0">Rapide</h5>
+                                <small>Processus optimisés</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex align-items-center justify-content-center mb-2">
+                            <i class="fas fa-mobile-alt fa-2x text-info me-3"></i>
+                            <div>
+                                <h5 class="mb-0">Responsive</h5>
+                                <small>Accessible partout</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sections de documentation -->
+        {% for section in documentation_sections %}
+        <div class="card mb-4 fade-in" id="{{ section.id }}">
+            <div class="card-header bg-{{ section.color }} text-white">
+                <h4 class="mb-0">
+                    <i class="{{ section.icon }} me-2"></i>
+                    {{ section.title }}
+                </h4>
+            </div>
+            <div class="card-body">
+                {% for item in section.content %}
+                    <!-- Paragraphe simple -->
+                    {% if item.type == 'paragraph' %}
+                    <p class="mb-3">{{ item.text }}</p>
+                    
+                    <!-- Liste de fonctionnalités -->
+                    {% elif item.type == 'features' %}
+                    <div class="row mb-4">
+                        {% for feature in item.items %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-check-circle text-success mt-1 me-2"></i>
+                                <span>{{ feature }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Rôle utilisateur -->
+                    {% elif item.type == 'role' %}
+                    <div class="card mb-3 border-{{ section.color }}">
+                        <div class="card-header bg-{{ section.color }} bg-opacity-10 border-{{ section.color }}">
+                            <h5 class="mb-0">{{ item.title }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">{{ item.description }}</p>
+                            <h6>Permissions :</h6>
+                            <ul class="mb-0">
+                                {% for permission in item.permissions %}
+                                <li>{{ permission }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Section avec étapes -->
+                    {% elif item.type == 'section' %}
+                    <div class="mb-4">
+                        <h5 class="text-{{ section.color }}">
+                            <i class="fas fa-caret-right me-2"></i>{{ item.title }}
+                        </h5>
+                        <p class="mb-3">{{ item.description }}</p>
+                        <div class="ps-4">
+                            <ol class="mb-0">
+                                {% for step in item.steps %}
+                                <li class="mb-2">{{ step }}</li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <!-- Note -->
+                    {% elif item.type == 'note' %}
+                    <div class="alert alert-light border mb-4">
+                        <div class="d-flex">
+                            <i class="fas fa-sticky-note text-warning fa-2x me-3"></i>
+                            <div>
+                                <strong>Note :</strong> {{ item.text }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Alerte -->
+                    {% elif item.type == 'alert' %}
+                    <div class="alert alert-{{ item.level }} mb-4">
+                        <div class="d-flex">
+                            <i class="fas 
+                                {% if item.level == 'warning' %}fa-exclamation-triangle
+                                {% elif item.level == 'danger' %}fa-times-circle
+                                {% elif item.level == 'success' %}fa-check-circle
+                                {% else %}fa-info-circle{% endif %}
+                                me-3 fa-lg mt-1"></i>
+                            <div>{{ item.text }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- FAQ -->
+                    {% elif item.type == 'faq' %}
+                    <div class="accordion mb-3" id="faqAccordion{{ forloop.parentloop.counter }}{{ forloop.counter }}">
+                        <div class="accordion-item border-0">
+                            <h2 class="accordion-header" id="heading{{ forloop.parentloop.counter }}{{ forloop.counter }}">
+                                <button class="accordion-button collapsed bg-light" type="button" 
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse{{ forloop.parentloop.counter }}{{ forloop.counter }}" 
+                                        aria-expanded="false" 
+                                        aria-controls="collapse{{ forloop.parentloop.counter }}{{ forloop.counter }}">
+                                    <strong>{{ item.question }}</strong>
+                                </button>
+                            </h2>
+                            <div id="collapse{{ forloop.parentloop.counter }}{{ forloop.counter }}" 
+                                 class="accordion-collapse collapse" 
+                                 aria-labelledby="heading{{ forloop.parentloop.counter }}{{ forloop.counter }}" 
+                                 data-bs-parent="#faqAccordion{{ forloop.parentloop.counter }}{{ forloop.counter }}">
+                                <div class="accordion-body">
+                                    {{ item.answer }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact -->
+                    {% elif item.type == 'contact' %}
+                    <div class="mb-4">
+                        <h5 class="mb-3">{{ item.title }}</h5>
+                        <div class="row">
+                            {% for contact in item.items %}
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="{{ contact.icon }} fa-lg text-{{ section.color }} me-3"></i>
+                                    <div>{{ contact.text }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            <!-- MODIFICATION ICI : Bouton avec JavaScript -->
+            <div class="card-footer bg-light text-end">
+                <button type="button" class="btn btn-sm btn-outline-{{ section.color }} scroll-to-top">
+                    <i class="fas fa-arrow-up me-1"></i> Retour en haut
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Pied de page de la documentation -->
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <div class="row align-items-center">
+                    <div class="col-md-8 text-md-start">
+                        <h5 class="mb-1">Besoin d'aide supplémentaire ?</h5>
+                        <p class="mb-0 text-muted">Contactez notre équipe de support pour une assistance personnalisée.</p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <a href="#support" class="btn btn-primary">
+                            <i class="fas fa-headset me-2"></i> Contacter le support
+                        </a>
+                    </div>
+                </div>
+                <hr class="my-3">
+                <div class="text-muted small">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    Dernière mise à jour : {{ last_updated }} | 
+                    <i class="fas fa-code me-1 ms-3"></i>
+                    Développé avec Django & Bootstrap
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Style CSS additionnel -->
+<style>
+    /* Animation pour les sections */
+    .fade-in {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Style pour la sidebar */
+    .list-group-item {
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+    }
+    
+    .list-group-item:hover, .list-group-item:focus {
+        background-color: rgba(52, 152, 219, 0.1);
+        border-left-color: var(--secondary-color);
+        padding-left: 20px;
+    }
+    
+    /* Style pour les cartes */
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Style pour les accordéons FAQ */
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(52, 152, 219, 0.1);
+        color: var(--primary-color);
+    }
+    
+    .accordion-button:focus {
+        box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        border-color: var(--secondary-color);
+    }
+    
+    /* Style pour le scrollspy */
+    :target {
+        scroll-margin-top: 80px; /* Compensation pour la navbar fixe */
+    }
+    
+    /* Style pour les boutons "Retour en haut" */
+    .scroll-to-top {
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .scroll-to-top:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .sticky-top {
+            position: relative !important;
+            top: 0 !important;
+        }
+        
+        .display-6 {
+            font-size: 1.5rem;
+        }
+        
+        .card-body .row > div {
+            margin-bottom: 1rem;
+        }
+        
+        .list-group-item {
+            padding: 0.75rem 1rem;
+        }
+        
+        :target {
+            scroll-margin-top: 60px; /* Ajustement pour mobile */
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .card-header h4 {
+            font-size: 1.25rem;
+        }
+        
+        .card-body h5 {
+            font-size: 1.1rem;
+        }
+        
+        .btn {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+
+<!-- JavaScript pour la solution 2 -->
+<script>
+    // Attendre que le DOM soit complètement chargé
+    document.addEventListener('DOMContentLoaded', function() {
+        // 1. Gérer le scroll fluide pour les liens d'ancrage
+        const allAnchorLinks = document.querySelectorAll('a[href^="#"]');
+        
+        allAnchorLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return; // Ignorer les liens vides
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    smoothScrollToElement(targetElement);
+                }
+            });
+        });
+        
+        // 2. Gérer les boutons "Retour en haut"
+        const scrollToTopButtons = document.querySelectorAll('.scroll-to-top');
+        
+        scrollToTopButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Scroll vers le haut de la page
+                smoothScrollToTop();
+            });
+        });
+        
+        // 3. Fonction pour le scroll fluide vers un élément
+        function smoothScrollToElement(element) {
+            // Calculer la position de l'élément
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset;
+            
+            // Obtenir la hauteur de la navbar pour compensation
+            const navbar = document.querySelector('.navbar');
+            const navbarHeight = navbar ? navbar.offsetHeight : 0;
+            
+            // Scroll avec animation
+            window.scrollTo({
+                top: offsetPosition - navbarHeight - 20, // 20px de marge
+                behavior: 'smooth'
+            });
+        }
+        
+        // 4. Fonction pour scroll vers le haut
+        function smoothScrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+        
+        // 5. Mettre en surbrillance la section active
+        function highlightActiveSection() {
+            const sections = document.querySelectorAll('.card[id]');
+            const navLinks = document.querySelectorAll('.list-group-item');
+            const scrollPosition = window.scrollY + 100; // Offset pour la détection
+            
+            // Retirer toutes les classes actives
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                link.style.backgroundColor = '';
+                link.style.borderLeftColor = '';
+                link.style.paddingLeft = '';
+            });
+            
+            // Trouver la section active
+            let currentSectionId = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                
+                if (scrollPosition >= sectionTop && 
+                    scrollPosition < sectionTop + sectionHeight) {
+                    currentSectionId = '#' + section.id;
+                }
+            });
+            
+            // Activer le lien correspondant
+            if (currentSectionId) {
+                const activeLink = document.querySelector(`a[href="${currentSectionId}"]`);
+                if (activeLink) {
+                    activeLink.classList.add('active');
+                    activeLink.style.backgroundColor = 'rgba(52, 152, 219, 0.1)';
+                    activeLink.style.borderLeftColor = 'var(--secondary-color)';
+                    activeLink.style.paddingLeft = '20px';
+                }
+            }
+        }
+        
+        // 6. Écouter l'événement de scroll pour mettre à jour la section active
+        window.addEventListener('scroll', highlightActiveSection);
+        
+        // 7. Initialiser au chargement
+        highlightActiveSection();
+        
+        // 8. Créer un bouton flottant "Retour en haut"
+        createFloatingBackToTopButton();
+        
+        function createFloatingBackToTopButton() {
+            // Créer l'élément bouton
+            const floatingButton = document.createElement('button');
+            floatingButton.innerHTML = '<i class="fas fa-arrow-up"></i>';
+            floatingButton.className = 'btn btn-primary btn-lg rounded-circle shadow';
+            floatingButton.setAttribute('title', 'Retour en haut');
+            floatingButton.setAttribute('aria-label', 'Retour en haut');
+            
+            // Style du bouton
+            Object.assign(floatingButton.style, {
+                position: 'fixed',
+                bottom: '30px',
+                right: '30px',
+                width: '50px',
+                height: '50px',
+                display: 'none',
+                zIndex: '1000',
+                cursor: 'pointer',
+                alignItems: 'center',
+                justifyContent: 'center'
+            });
+            
+            // Ajouter l'événement click
+            floatingButton.addEventListener('click', smoothScrollToTop);
+            
+            // Ajouter au body
+            document.body.appendChild(floatingButton);
+            
+            // Afficher/masquer le bouton selon le scroll
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 500) {
+                    floatingButton.style.display = 'flex';
+                } else {
+                    floatingButton.style.display = 'none';
+                }
+            });
+        }
+        
+        // 9. Initialiser les tooltips Bootstrap
+        const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipElements.forEach(element => {
+            new bootstrap.Tooltip(element);
+        });
+        
+        // 10. Gérer les accordéons FAQ
+        const faqButtons = document.querySelectorAll('.accordion-button');
+        faqButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // Ajouter une animation
+                this.parentElement.parentElement.classList.add('faq-transition');
+                
+                // Retirer la classe après l'animation
+                setTimeout(() => {
+                    this.parentElement.parentElement.classList.remove('faq-transition');
+                }, 300);
+            });
+        });
+        
+        // 11. Ajouter une classe CSS pour les transitions FAQ
+        const style = document.createElement('style');
+        style.textContent = `
+            .faq-transition {
+                transition: all 0.3s ease;
+            }
+            
+            .faq-transition .accordion-collapse {
+                transition: height 0.3s ease;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+    
+    // 12. Fallback pour les navigateurs qui ne supportent pas le scroll smooth
+    if (!('scrollBehavior' in document.documentElement.style)) {
+        // Implémentation de fallback
+        const originalScrollTo = window.scrollTo;
+        window.scrollTo = function(options) {
+            if (options && options.behavior === 'smooth') {
+                const start = window.pageYOffset;
+                const end = options.top;
+                const distance = end - start;
+                const duration = 500; // ms
+                let startTime = null;
+                
+                function animation(currentTime) {
+                    if (startTime === null) startTime = currentTime;
+                    const timeElapsed = currentTime - startTime;
+                    const progress = Math.min(timeElapsed / duration, 1);
+                    
+                    // Fonction d'easing (easeInOutCubic)
+                    const ease = progress < 0.5 
+                        ? 4 * progress * progress * progress 
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                    
+                    window.scrollTo(0, start + distance * ease);
+                    
+                    if (timeElapsed < duration) {
+                        requestAnimationFrame(animation);
+                    }
+                }
+                
+                requestAnimationFrame(animation);
+            } else {
+                originalScrollTo.apply(window, arguments);
+            }
+        };
+    }
+</script>
+{% endblock %}
