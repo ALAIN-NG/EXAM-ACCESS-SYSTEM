@@ -1,0 +1,289 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-4 mb-3">Détail de l'étudiant</h1>{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'etudiant_list' %}"> <h2></i>Retour</h2></a>
+{% endblock %}
+
+{% block content %}
+<div class="btn-group">
+    <a href="{% url 'etudiant_update' etudiant.pk %}" class="btn btn-warning">
+        <i class="fas fa-edit"></i> Modifier
+    </a>
+    <a href="{% url 'etudiant_delete' etudiant.pk %}" class="btn btn-danger">
+        <i class="fas fa-trash"></i> Supprimer
+    </a>
+</div>
+<br><br>
+
+
+<div class="row">
+    <!-- Informations étudiant -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-user-graduate"></i> Informations personnelles</h5>
+            </div>
+            <div class="card-body text-center">
+                {% if etudiant.photo %}
+                <img src="{{ etudiant.photo.url }}" alt="{{ etudiant.nom }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;">
+                    <i class="fas fa-user fa-4x text-white"></i>
+                </div>
+                {% endif %}
+                
+                <h4>{{ etudiant.nom }} {{ etudiant.prenom }}</h4>
+                <p class="text-muted">{{ etudiant.matricule }}</p>
+                
+                <div class="d-flex justify-content-center mb-3">
+                    {% if etudiant.statut == 'actif' %}
+                    <span class="badge bg-success">Actif</span>
+                    {% elif etudiant.statut == 'suspendu' %}
+                    <span class="badge bg-warning">Suspendu</span>
+                    {% elif etudiant.statut == 'exclu' %}
+                    <span class="badge bg-danger">Exclu</span>
+                    {% elif etudiant.statut == 'diplome' %}
+                    <span class="badge bg-info">Diplômé</span>
+                    {% endif %}
+                </div>
+                
+                <div class="text-start">
+                    <p><strong><i class="fas fa-envelope"></i> Email:</strong> {{ etudiant.email|default:"Non défini" }}</p>
+                    <p><strong><i class="fas fa-phone"></i> Téléphone:</strong> {{ etudiant.telephone|default:"Non défini" }}</p>
+                    {% if etudiant.date_naissance %}
+                    <p><strong><i class="fas fa-birthday-cake"></i> Date de naissance:</strong> {{ etudiant.date_naissance|date:"d/m/Y" }}</p>
+                    {% endif %}
+                    <p><strong><i class="fas fa-book"></i> Filière:</strong> {{ etudiant.filiere|default:"Non défini" }}</p>
+                    <p><strong><i class="fas fa-layer-group"></i> Niveau:</strong> {{ etudiant.niveau|default:"Non défini" }}</p>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'paiement_create' %}?etudiant={{ etudiant.pk }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-money-bill"></i> Ajouter paiement
+                    </a>
+                    <a href="{% url 'inscription_create' %}?etudiant={{ etudiant.pk }}" class="btn btn-info btn-sm">
+                        <i class="fas fa-edit"></i> Inscrire à une UE
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Onglets -->
+    <div class="col-md-8">
+        <ul class="nav nav-tabs" id="studentTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="paiements-tab" data-bs-toggle="tab" data-bs-target="#paiements" type="button">
+                    <i class="fas fa-money-bill-wave"></i> Paiements
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="inscriptions-tab" data-bs-toggle="tab" data-bs-target="#inscriptions" type="button">
+                    <i class="fas fa-edit"></i>UE de l'étudiant
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="controles-tab" data-bs-toggle="tab" data-bs-target="#controles" type="button">
+                    <i class="fas fa-qrcode"></i> Contrôles d'accès
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="justificatifs-tab" data-bs-toggle="tab" data-bs-target="#justificatifs" type="button">
+                    <i class="fas fa-file-medical"></i> Justificatifs
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="studentTabsContent">
+            <!-- Paiements -->
+            <div class="tab-pane fade show active" id="paiements" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        {% if paiements %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Année académique</th>
+                                        <th>Montant attendu</th>
+                                        <th>Montant payé</th>
+                                        <th>Statut</th>
+                                        <th>Date paiement</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for paiement in paiements %}
+                                    <tr>
+                                        <td>{{ paiement.annee_academique.code }}</td>
+                                        <td>{{ paiement.montant_attendu }} FCFA</td>
+                                        <td>{{ paiement.montant }} FCFA</td>
+                                        <td>
+                                            {% if paiement.est_regle %}
+                                            <span class="badge bg-success">Réglé</span>
+                                            {% else %}
+                                            <span class="badge bg-warning">Non réglé</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ paiement.date_paiement|date:"d/m/Y H:i"|default:"-" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">Aucun paiement enregistré</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Inscriptions UE -->
+            <div class="tab-pane fade" id="inscriptions" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        {% if inscriptions %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>UE</th>
+                                        <th>Année académique</th>
+                                        <th>Date inscription</th>
+                                        <th>Autorisé examen</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inscription in inscriptions %}
+                                    <tr>
+                                        <td>{{ inscription.ue.code }} - {{ inscription.ue.intitule }}</td>
+                                        <td>{{ inscription.annee_academique.code }}</td>
+                                        <td>{{ inscription.date_inscription|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if inscription.est_autorise_examen %}
+                                            <span class="badge bg-success">Oui</span>
+                                            {% else %}
+                                            <span class="badge bg-warning">Non</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">Aucune inscription UE</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contrôles d'accès -->
+            <div class="tab-pane fade" id="controles" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        {% if controles %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Examen</th>
+                                        <th>Date scan</th>
+                                        <th>Méthode</th>
+                                        <th>Statut</th>
+                                        <th>Scanné par</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for controle in controles %}
+                                    <tr>
+                                        <td>{{ controle.examen.ue.code }} - {{ controle.examen.date }}</td>
+                                        <td>{{ controle.date_scan|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ controle.get_scan_method_display }}</td>
+                                        <td>
+                                            {% if controle.autorise %}
+                                            <span class="badge bg-success">Autorisé</span>
+                                            {% else %}
+                                            <span class="badge bg-danger">Refusé</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ controle.scanned_by|default:"-" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">Aucun contrôle d'accès</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Justificatifs -->
+            <div class="tab-pane fade" id="justificatifs" role="tabpanel">
+                <div class="card">
+                    <div class="card-body">
+                        {% if justificatifs %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Examen</th>
+                                        <th>Type</th>
+                                        <th>Date dépôt</th>
+                                        <th>Statut</th>
+                                        <th>Traité par</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for justificatif in justificatifs %}
+                                    <tr>
+                                        <td>{{ justificatif.examen.ue.code }} - {{ justificatif.examen.date }}</td>
+                                        <td>{{ justificatif.get_type_justificatif_display }}</td>
+                                        <td>{{ justificatif.date_depot|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if justificatif.statut == 'en_attente' %}
+                                            <span class="badge bg-warning">En attente</span>
+                                            {% elif justificatif.statut == 'accepte' %}
+                                            <span class="badge bg-success">Accepté</span>
+                                            {% elif justificatif.statut == 'refuse' %}
+                                            <span class="badge bg-danger">Refusé</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ justificatif.traite_par|default:"-" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted text-center">Aucun justificatif déposé</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        border: none;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #0d6efd;
+        border-bottom: 2px solid #0d6efd;
+    }
+    
+    .tab-content {
+        border: 1px solid #dee2e6;
+        border-top: none;
+        padding: 20px;
+        border-radius: 0 0 5px 5px;
+    }
+</style>
+{% endblock %}

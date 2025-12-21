@@ -1,0 +1,51 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-4 mb-3">Confirmer la suppression</h1>{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'ue_list' %}"><h2>Retour<h2></a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Êtes-vous sûr de vouloir supprimer cette UE ?</p>
+                
+                <div class="alert alert-warning">
+                    <strong>Attention :</strong> Cette action est irréversible. Tous les examens et inscriptions associés à cette UE seront également supprimés.
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Détails de l'UE :</h6>
+                        <p class="mb-1"><strong>Code :</strong> {{ ue.code }}</p>
+                        <p class="mb-1"><strong>Intitulé :</strong> {{ ue.intitule }}</p>
+                        <p class="mb-1"><strong>Filière :</strong> {{ ue.filiere.nom }}</p>
+                        <p class="mb-1"><strong>Niveau :</strong> {{ ue.niveau.nom }}</p>
+                        <p class="mb-0"><strong>Crédits :</strong> {{ ue.credit }}</p>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'ue_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmer la suppression
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

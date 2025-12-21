@@ -10,7 +10,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 import csv
 from django.contrib.auth import authenticate, login
-from .forms import UniversalLoginForm
+from .forms import *
 import json
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
@@ -23,16 +23,19 @@ import base64
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
+from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_protect
-from .forms import StudentLoginForm
-from .forms import JustificatifForm, UserProfileForm
-from datetime import timedelta
+import datetime
 
 from .models import (
     Etudiant, Examen, ControleAcces, InscriptionUE,
     Paiement, JustificatifAbsence, UE, Salle, SessionExamen,
     AnneeAcademique, Filiere, Niveau, AuditLog
 )
+from django.contrib.auth.decorators import permission_required
+from django.core.paginator import Paginator
+
 from .serializers import (
     EtudiantSerializer, ExamenSerializer, ControleAccesSerializer,
     JustificatifAbsenceSerializer, PaiementSerializer, InscriptionUESerializer,
@@ -944,35 +947,6 @@ def scanner_api(request, examen_id):
 
 
 
-# core/views.py - Ajoutez ces vues
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.utils import timezone
-from .models import Etudiant, Examen, ControleAcces, JustificatifAbsence
-from .services import ExamenService, ReportingService
-
-# @login_required
-# def dashboard_view(request):
-#     """Vue du tableau de bord principal"""
-#     context = {
-#         'stats': {
-#             'total_etudiants': Etudiant.objects.count(),
-#             'examens_aujourdhui': Examen.objects.filter(date=timezone.now().date()).count(),
-#             'scans_aujourdhui': ControleAcces.objects.filter(
-#                 date_scan__date=timezone.now().date()
-#             ).count(),
-#             'examens_en_cours': Examen.objects.filter(
-#                 date=timezone.now().date(),
-#                 heure_debut__lte=timezone.now().time(),
-#                 heure_fin__gte=timezone.now().time()
-#             ).count(),
-#         },
-#         'examens_du_jour': ExamenService.get_examens_du_jour(request.user),
-#         'recent_activity': [],  # À implémenter avec AuditLog
-#     }
-#     return render(request, 'core/dashboard.html', context)
-
 @login_required
 def scan_interface(request):
     """Interface de scan QR code"""
@@ -1146,56 +1120,6 @@ def home_view(request):
         ]
     }
     return render(request, 'core/home.html', context)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @login_required
@@ -1979,9 +1903,6 @@ def add_justificatif(request, examen_id=None):
 
 
 
-
-
-
 @csrf_protect
 def universal_login_view(request):
     """Vue de connexion unique pour tous les types d'utilisateurs"""
@@ -2045,3 +1966,959 @@ def universal_login_view(request):
         'show_student_option': True
     }
     return render(request, 'core/universal_login.html', context)
+
+
+
+# ============== Année Académique ==============
+@login_required
+@permission_required('core.view_anneeacademique', raise_exception=True)
+def annee_list(request):
+    annees = AnneeAcademique.objects.all()
+    
+    # Recherche
+    query = request.GET.get('q')
+    if query:
+        annees = annees.filter(Q(code__icontains=query))
+    
+    # Pagination
+    paginator = Paginator(annees, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'core/annee/list.html', {
+        'page_obj': page_obj,
+        'query': query
+    })
+
+@login_required
+@permission_required('core.add_anneeacademique', raise_exception=True)
+def annee_create(request):
+    if request.method == 'POST':
+        form = AnneeAcademiqueForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Année académique créée avec succès!')
+            return redirect('annee_list')
+    else:
+        form = AnneeAcademiqueForm()
+    
+    return render(request, 'core/annee/form.html', {
+        'form': form,
+        'title': 'Créer une année académique'
+    })
+
+@login_required
+@permission_required('core.change_anneeacademique', raise_exception=True)
+def annee_update(request, pk):
+    annee = get_object_or_404(AnneeAcademique, pk=pk)
+    
+    if request.method == 'POST':
+        form = AnneeAcademiqueForm(request.POST, instance=annee)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Année académique mise à jour avec succès!')
+            return redirect('annee_list')
+    else:
+        form = AnneeAcademiqueForm(instance=annee)
+    
+    return render(request, 'core/annee/form.html', {
+        'form': form,
+        'title': 'Modifier l\'année académique',
+        'annee': annee
+    })
+
+@login_required
+@permission_required('core.delete_anneeacademique', raise_exception=True)
+def annee_delete(request, pk):
+    annee = get_object_or_404(AnneeAcademique, pk=pk)
+    
+    if request.method == 'POST':
+        annee.delete()
+        messages.success(request, 'Année académique supprimée avec succès!')
+        return redirect('annee_list')
+    
+    return render(request, 'core/annee/confirm_delete.html', {
+        'annee': annee
+    })
+
+# ============== Filière ==============
+@login_required
+@permission_required('core.view_filiere', raise_exception=True)
+def filiere_list(request):
+    filieres = Filiere.objects.all()
+    
+    query = request.GET.get('q')
+    if query:
+        filieres = filieres.filter(
+            Q(nom__icontains=query) | 
+            Q(code__icontains=query)
+        )
+    
+    paginator = Paginator(filieres, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'core/filiere/list.html', {
+        'page_obj': page_obj,
+        'query': query
+    })
+
+@login_required
+@permission_required('core.add_filiere', raise_exception=True)
+def filiere_create(request):
+    if request.method == 'POST':
+        form = FiliereForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Filière créée avec succès!')
+            return redirect('filiere_list')
+    else:
+        form = FiliereForm()
+    
+    return render(request, 'core/filiere/form.html', {
+        'form': form,
+        'title': 'Créer une filière'
+    })
+
+@login_required
+@permission_required('core.change_filiere', raise_exception=True)
+def filiere_update(request, pk):
+    filiere = get_object_or_404(Filiere, pk=pk)
+    
+    if request.method == 'POST':
+        form = FiliereForm(request.POST, instance=filiere)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Filière mise à jour avec succès!')
+            return redirect('filiere_list')
+    else:
+        form = FiliereForm(instance=filiere)
+    
+    return render(request, 'core/filiere/form.html', {
+        'form': form,
+        'title': 'Modifier la filière',
+        'filiere': filiere
+    })
+
+@login_required
+@permission_required('core.delete_filiere', raise_exception=True)
+def filiere_delete(request, pk):
+    filiere = get_object_or_404(Filiere, pk=pk)
+    
+    if request.method == 'POST':
+        filiere.delete()
+        messages.success(request, 'Filière supprimée avec succès!')
+        return redirect('filiere_list')
+    
+    return render(request, 'core/filiere/confirm_delete.html', {
+        'filiere': filiere
+    })
+
+# ============== Niveau ==============
+@login_required
+@permission_required('core.view_niveau', raise_exception=True)
+def niveau_list(request):
+    niveaux = Niveau.objects.all()
+    
+    query = request.GET.get('q')
+    if query:
+        niveaux = niveaux.filter(Q(nom__icontains=query))
+    
+    paginator = Paginator(niveaux, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'core/niveau/list.html', {
+        'page_obj': page_obj,
+        'query': query
+    })
+
+@login_required
+@permission_required('core.add_niveau', raise_exception=True)
+def niveau_create(request):
+    if request.method == 'POST':
+        form = NiveauForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Niveau créé avec succès!')
+            return redirect('niveau_list')
+    else:
+        form = NiveauForm()
+    
+    return render(request, 'core/niveau/form.html', {
+        'form': form,
+        'title': 'Créer un niveau'
+    })
+
+@login_required
+@permission_required('core.change_niveau', raise_exception=True)
+def niveau_update(request, pk):
+    niveau = get_object_or_404(Niveau, pk=pk)
+    
+    if request.method == 'POST':
+        form = NiveauForm(request.POST, instance=niveau)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Niveau mis à jour avec succès!')
+            return redirect('niveau_list')
+    else:
+        form = NiveauForm(instance=niveau)
+    
+    return render(request, 'core/niveau/form.html', {
+        'form': form,
+        'title': 'Modifier le niveau',
+        'niveau': niveau
+    })
+
+@login_required
+@permission_required('core.delete_niveau', raise_exception=True)
+def niveau_delete(request, pk):
+    niveau = get_object_or_404(Niveau, pk=pk)
+    
+    if request.method == 'POST':
+        niveau.delete()
+        messages.success(request, 'Niveau supprimé avec succès!')
+        return redirect('niveau_list')
+    
+    return render(request, 'core/niveau/confirm_delete.html', {
+        'niveau': niveau
+    })
+
+# ============== UE ==============
+@login_required
+@permission_required('core.view_ue', raise_exception=True)
+def ue_list(request):
+    ues = UE.objects.all().select_related('filiere', 'niveau')
+    
+    query = request.GET.get('q')
+    filiere_id = request.GET.get('filiere')
+    niveau_id = request.GET.get('niveau')
+    
+    if query:
+        ues = ues.filter(
+            Q(code__icontains=query) | 
+            Q(intitule__icontains=query)
+        )
+    
+    if filiere_id:
+        ues = ues.filter(filiere_id=filiere_id)
+    
+    if niveau_id:
+        ues = ues.filter(niveau_id=niveau_id)
+    
+    paginator = Paginator(ues, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    filieres = Filiere.objects.all()
+    niveaux = Niveau.objects.all()
+    
+    return render(request, 'core/ue/list.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'filieres': filieres,
+        'niveaux': niveaux,
+        'selected_filiere': filiere_id,
+        'selected_niveau': niveau_id
+    })
+
+@login_required
+@permission_required('core.add_ue', raise_exception=True)
+def ue_create(request):
+    if request.method == 'POST':
+        form = UEForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'UE créée avec succès!')
+            return redirect('ue_list')
+    else:
+        form = UEForm()
+    
+    return render(request, 'core/ue/form.html', {
+        'form': form,
+        'title': 'Créer une UE'
+    })
+
+@login_required
+@permission_required('core.change_ue', raise_exception=True)
+def ue_update(request, pk):
+    ue = get_object_or_404(UE, pk=pk)
+    
+    if request.method == 'POST':
+        form = UEForm(request.POST, instance=ue)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'UE mise à jour avec succès!')
+            return redirect('ue_list')
+    else:
+        form = UEForm(instance=ue)
+    
+    return render(request, 'core/ue/form.html', {
+        'form': form,
+        'title': 'Modifier l\'UE',
+        'ue': ue
+    })
+
+@login_required
+@permission_required('core.delete_ue', raise_exception=True)
+def ue_delete(request, pk):
+    ue = get_object_or_404(UE, pk=pk)
+    
+    if request.method == 'POST':
+        ue.delete()
+        messages.success(request, 'UE supprimée avec succès!')
+        return redirect('ue_list')
+    
+    return render(request, 'core/ue/confirm_delete.html', {
+        'ue': ue
+    })
+
+# ============== Étudiant ==============
+@login_required
+@permission_required('core.view_etudiant', raise_exception=True)
+def etudiant_list(request):
+    etudiants = Etudiant.objects.all().select_related('filiere', 'niveau')
+    
+    query = request.GET.get('q')
+    filiere_id = request.GET.get('filiere')
+    statut = request.GET.get('statut')
+    
+    if query:
+        etudiants = etudiants.filter(
+            Q(matricule__icontains=query) | 
+            Q(nom__icontains=query) |
+            Q(prenom__icontains=query) |
+            Q(email__icontains=query)
+        )
+    
+    if filiere_id:
+        etudiants = etudiants.filter(filiere_id=filiere_id)
+    
+    if statut:
+        etudiants = etudiants.filter(statut=statut)
+    
+    paginator = Paginator(etudiants, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    filieres = Filiere.objects.all()
+    
+    return render(request, 'core/etudiant/list.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'filieres': filieres,
+        'selected_filiere': filiere_id,
+        'selected_statut': statut,
+        'statut_choices': Etudiant.STATUT_CHOICES
+    })
+
+@login_required
+@permission_required('core.add_etudiant', raise_exception=True)
+def etudiant_create(request):
+    if request.method == 'POST':
+        form = EtudiantForm(request.POST, request.FILES)
+        if form.is_valid():
+            etudiant = form.save(commit=False)
+            # Générer un token QR si non existant
+            if not etudiant.qr_token:
+                import uuid
+                etudiant.qr_token = uuid.uuid4()
+            etudiant.save()
+            messages.success(request, 'Étudiant créé avec succès!')
+            return redirect('etudiant_list')
+    else:
+        form = EtudiantForm()
+    
+    return render(request, 'core/etudiant/form.html', {
+        'form': form,
+        'title': 'Créer un étudiant'
+    })
+
+@login_required
+@permission_required('core.change_etudiant', raise_exception=True)
+def etudiant_update(request, pk):
+    etudiant = get_object_or_404(Etudiant, pk=pk)
+    
+    if request.method == 'POST':
+        form = EtudiantForm(request.POST, request.FILES, instance=etudiant)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Étudiant mis à jour avec succès!')
+            return redirect('etudiant_list')
+    else:
+        form = EtudiantForm(instance=etudiant)
+    
+    return render(request, 'core/etudiant/form.html', {
+        'form': form,
+        'title': 'Modifier l\'étudiant',
+        'etudiant': etudiant
+    })
+
+@login_required
+@permission_required('core.delete_etudiant', raise_exception=True)
+def etudiant_delete(request, pk):
+    etudiant = get_object_or_404(Etudiant, pk=pk)
+    
+    if request.method == 'POST':
+        etudiant.delete()
+        messages.success(request, 'Étudiant supprimé avec succès!')
+        return redirect('etudiant_list')
+    
+    return render(request, 'core/etudiant/confirm_delete.html', {
+        'etudiant': etudiant
+    })
+
+@login_required
+@permission_required('core.view_etudiant', raise_exception=True)
+def etudiant_detail(request, pk):
+    etudiant = get_object_or_404(Etudiant.objects.select_related('filiere', 'niveau', 'user'), pk=pk)
+    
+    # Récupérer les paiements
+    paiements = Paiement.objects.filter(etudiant=etudiant).select_related('annee_academique')
+    
+    # Récupérer les inscriptions
+    inscriptions = InscriptionUE.objects.filter(etudiant=etudiant).select_related('ue', 'annee_academique')
+    
+    # Récupérer les contrôles d'accès
+    controles = ControleAcces.objects.filter(etudiant=etudiant).select_related('examen', 'scanned_by')
+    
+    # Récupérer les justificatifs
+    justificatifs = JustificatifAbsence.objects.filter(etudiant=etudiant).select_related('examen', 'traite_par')
+    
+    return render(request, 'core/etudiant/detail.html', {
+        'etudiant': etudiant,
+        'paiements': paiements,
+        'inscriptions': inscriptions,
+        'controles': controles,
+        'justificatifs': justificatifs
+    })
+
+# ============== Paiement ==============
+@login_required
+@permission_required('core.view_paiement', raise_exception=True)
+def paiement_list(request):
+    paiements = Paiement.objects.all().select_related('etudiant', 'annee_academique')
+    
+    query = request.GET.get('q')
+    etudiant_id = request.GET.get('etudiant')
+    annee_id = request.GET.get('annee')
+    est_regle = request.GET.get('est_regle')
+    
+    if query:
+        paiements = paiements.filter(
+            Q(etudiant__matricule__icontains=query) |
+            Q(etudiant__nom__icontains=query) |
+            Q(etudiant__prenom__icontains=query)
+        )
+    
+    if etudiant_id:
+        paiements = paiements.filter(etudiant_id=etudiant_id)
+    
+    if annee_id:
+        paiements = paiements.filter(annee_academique_id=annee_id)
+    
+    if est_regle is not None:
+        paiements = paiements.filter(est_regle=(est_regle == '1'))
+    
+    paginator = Paginator(paiements, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    etudiants = Etudiant.objects.all()
+    annees = AnneeAcademique.objects.all()
+    
+    return render(request, 'core/paiement/list.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'etudiants': etudiants,
+        'annees': annees,
+        'selected_etudiant': etudiant_id,
+        'selected_annee': annee_id,
+        'selected_est_regle': est_regle
+    })
+
+@login_required
+@permission_required('core.add_paiement', raise_exception=True)
+def paiement_create(request):
+    if request.method == 'POST':
+        form = PaiementForm(request.POST)
+        if form.is_valid():
+            paiement = form.save(commit=False)
+            paiement.created_by = request.user
+            paiement.save()
+            messages.success(request, 'Paiement enregistré avec succès!')
+            return redirect('paiement_list')
+    else:
+        form = PaiementForm()
+    
+    return render(request, 'core/paiement/form.html', {
+        'form': form,
+        'title': 'Enregistrer un paiement'
+    })
+
+@login_required
+@permission_required('core.change_paiement', raise_exception=True)
+def paiement_update(request, pk):
+    paiement = get_object_or_404(Paiement, pk=pk)
+    
+    if request.method == 'POST':
+        form = PaiementForm(request.POST, instance=paiement)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Paiement mis à jour avec succès!')
+            return redirect('paiement_list')
+    else:
+        form = PaiementForm(instance=paiement)
+    
+    return render(request, 'core/paiement/form.html', {
+        'form': form,
+        'title': 'Modifier le paiement',
+        'paiement': paiement
+    })
+
+@login_required
+@permission_required('core.delete_paiement', raise_exception=True)
+def paiement_delete(request, pk):
+    paiement = get_object_or_404(Paiement, pk=pk)
+    
+    if request.method == 'POST':
+        paiement.delete()
+        messages.success(request, 'Paiement supprimé avec succès!')
+        return redirect('paiement_list')
+    
+    return render(request, 'core/paiement/confirm_delete.html', {
+        'paiement': paiement
+    })
+
+# ============== Inscription UE ==============
+@login_required
+@permission_required('core.view_inscriptionue', raise_exception=True)
+def inscription_list(request):
+    inscriptions = InscriptionUE.objects.all().select_related('etudiant', 'ue', 'annee_academique')
+    
+    query = request.GET.get('q')
+    etudiant_id = request.GET.get('etudiant')
+    ue_id = request.GET.get('ue')
+    autorise = request.GET.get('autorise')
+    
+    if query:
+        inscriptions = inscriptions.filter(
+            Q(etudiant__matricule__icontains=query) |
+            Q(ue__code__icontains=query) |
+            Q(ue__intitule__icontains=query)
+        )
+    
+    if etudiant_id:
+        inscriptions = inscriptions.filter(etudiant_id=etudiant_id)
+    
+    if ue_id:
+        inscriptions = inscriptions.filter(ue_id=ue_id)
+    
+    if autorise is not None:
+        inscriptions = inscriptions.filter(est_autorise_examen=(autorise == '1'))
+    
+    paginator = Paginator(inscriptions, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    etudiants = Etudiant.objects.all()
+    ues = UE.objects.all()
+    
+    return render(request, 'core/inscription/list.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'etudiants': etudiants,
+        'ues': ues,
+        'selected_etudiant': etudiant_id,
+        'selected_ue': ue_id,
+        'selected_autorise': autorise
+    })
+
+@login_required
+@permission_required('core.add_inscriptionue', raise_exception=True)
+def inscription_create(request):
+    if request.method == 'POST':
+        form = InscriptionUEForm(request.POST)
+        if form.is_valid():
+            inscription = form.save(commit=False)
+            inscription.created_by = request.user
+            inscription.save()
+            messages.success(request, 'Inscription UE enregistrée avec succès!')
+            return redirect('inscription_list')
+    else:
+        form = InscriptionUEForm()
+    
+    return render(request, 'core/inscription/form.html', {
+        'form': form,
+        'title': 'Créer une inscription UE'
+    })
+
+@login_required
+@permission_required('core.change_inscriptionue', raise_exception=True)
+def inscription_update(request, pk):
+    inscription = get_object_or_404(InscriptionUE, pk=pk)
+    
+    if request.method == 'POST':
+        form = InscriptionUEForm(request.POST, instance=inscription)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Inscription UE mise à jour avec succès!')
+            return redirect('inscription_list')
+    else:
+        form = InscriptionUEForm(instance=inscription)
+    
+    return render(request, 'core/inscription/form.html', {
+        'form': form,
+        'title': 'Modifier l\'inscription UE',
+        'inscription': inscription
+    })
+
+@login_required
+@permission_required('core.delete_inscriptionue', raise_exception=True)
+def inscription_delete(request, pk):
+    inscription = get_object_or_404(InscriptionUE, pk=pk)
+    
+    if request.method == 'POST':
+        inscription.delete()
+        messages.success(request, 'Inscription UE supprimée avec succès!')
+        return redirect('inscription_list')
+    
+    return render(request, 'core/inscription/confirm_delete.html', {
+        'inscription': inscription
+    })
+
+# ============== Salle ==============
+@login_required
+@permission_required('core.view_salle', raise_exception=True)
+def salle_list(request):
+    salles = Salle.objects.all()
+    
+    query = request.GET.get('q')
+    if query:
+        salles = salles.filter(
+            Q(code__icontains=query) |
+            Q(batiment__icontains=query) |
+            Q(etage__icontains=query)
+        )
+    
+    paginator = Paginator(salles, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'core/salle/list.html', {
+        'page_obj': page_obj,
+        'query': query
+    })
+
+@login_required
+@permission_required('core.add_salle', raise_exception=True)
+def salle_create(request):
+    if request.method == 'POST':
+        form = SalleForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Salle créée avec succès!')
+            return redirect('salle_list')
+    else:
+        form = SalleForm()
+    
+    return render(request, 'core/salle/form.html', {
+        'form': form,
+        'title': 'Créer une salle'
+    })
+
+@login_required
+@permission_required('core.change_salle', raise_exception=True)
+def salle_update(request, pk):
+    salle = get_object_or_404(Salle, pk=pk)
+    
+    if request.method == 'POST':
+        form = SalleForm(request.POST, instance=salle)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Salle mise à jour avec succès!')
+            return redirect('salle_list')
+    else:
+        form = SalleForm(instance=salle)
+    
+    return render(request, 'core/salle/form.html', {
+        'form': form,
+        'title': 'Modifier la salle',
+        'salle': salle
+    })
+
+@login_required
+@permission_required('core.delete_salle', raise_exception=True)
+def salle_delete(request, pk):
+    salle = get_object_or_404(Salle, pk=pk)
+    
+    if request.method == 'POST':
+        salle.delete()
+        messages.success(request, 'Salle supprimée avec succès!')
+        return redirect('salle_list')
+    
+    return render(request, 'core/salle/confirm_delete.html', {
+        'salle': salle
+    })
+
+# ============== Session Examen ==============
+@login_required
+@permission_required('core.view_sessionexamen', raise_exception=True)
+def session_list(request):
+    sessions = SessionExamen.objects.all().select_related('annee_academique')
+    
+    query = request.GET.get('q')
+    type_session = request.GET.get('type')
+    active = request.GET.get('active')
+    
+    if query:
+        sessions = sessions.filter(
+            Q(nom__icontains=query) |
+            Q(annee_academique__code__icontains=query)
+        )
+    
+    if type_session:
+        sessions = sessions.filter(type_session=type_session)
+    
+    if active is not None:
+        sessions = sessions.filter(active=(active == '1'))
+    
+    paginator = Paginator(sessions, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'core/session/list.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'selected_type': type_session,
+        'selected_active': active,
+        'session_types': SessionExamen.SESSION_TYPES
+    })
+
+@login_required
+@permission_required('core.add_sessionexamen', raise_exception=True)
+def session_create(request):
+    if request.method == 'POST':
+        form = SessionExamenForm(request.POST)
+        if form.is_valid():
+            session = form.save(commit=False)
+            session.created_by = request.user
+            session.save()
+            messages.success(request, 'Session d\'examen créée avec succès!')
+            return redirect('session_list')
+    else:
+        form = SessionExamenForm()
+    
+    return render(request, 'core/session/form.html', {
+        'form': form,
+        'title': 'Créer une session d\'examen'
+    })
+
+@login_required
+@permission_required('core.change_sessionexamen', raise_exception=True)
+def session_update(request, pk):
+    session = get_object_or_404(SessionExamen, pk=pk)
+    
+    if request.method == 'POST':
+        form = SessionExamenForm(request.POST, instance=session)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Session d\'examen mise à jour avec succès!')
+            return redirect('session_list')
+    else:
+        form = SessionExamenForm(instance=session)
+    
+    return render(request, 'core/session/form.html', {
+        'form': form,
+        'title': 'Modifier la session d\'examen',
+        'session': session
+    })
+
+@login_required
+@permission_required('core.delete_sessionexamen', raise_exception=True)
+def session_delete(request, pk):
+    session = get_object_or_404(SessionExamen, pk=pk)
+    
+    if request.method == 'POST':
+        session.delete()
+        messages.success(request, 'Session d\'examen supprimée avec succès!')
+        return redirect('session_list')
+    
+    return render(request, 'core/session/confirm_delete.html', {
+        'session': session
+    })
+
+# ============== Examen ==============
+@login_required
+@permission_required('core.view_examen', raise_exception=True)
+def examen_list1(request):
+    examens = Examen.objects.all().select_related('ue', 'annee_academique', 'session', 'salle', 'surveillant')
+    
+    query = request.GET.get('q')
+    ue_id = request.GET.get('ue')
+    session_id = request.GET.get('session')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    
+    if query:
+        examens = examens.filter(
+            Q(ue__code__icontains=query) |
+            Q(ue__intitule__icontains=query) |
+            Q(salle__code__icontains=query)
+        )
+    
+    if ue_id:
+        examens = examens.filter(ue_id=ue_id)
+    
+    if session_id:
+        examens = examens.filter(session_id=session_id)
+    
+    if date_from:
+        examens = examens.filter(date__gte=date_from)
+    
+    if date_to:
+        examens = examens.filter(date__lte=date_to)
+    
+    # Trier par date et heure
+    examens = examens.order_by('date', 'heure_debut')
+    
+    paginator = Paginator(examens, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    ues = UE.objects.all()
+    sessions = SessionExamen.objects.all()
+    
+    return render(request, 'core/examen/list.html', {
+        'page_obj': page_obj,
+        'query': query,
+        'ues': ues,
+        'sessions': sessions,
+        'selected_ue': ue_id,
+        'selected_session': session_id,
+        'date_from': date_from,
+        'date_to': date_to
+    })
+
+@login_required
+@permission_required('core.add_examen', raise_exception=True)
+def examen_create(request):
+    if request.method == 'POST':
+        form = ExamenForm(request.POST)
+        if form.is_valid():
+            examen = form.save(commit=False)
+            examen.created_by = request.user
+            examen.save()
+            messages.success(request, 'Examen créé avec succès!')
+            return redirect('examen_list')
+    else:
+        form = ExamenForm()
+    
+    return render(request, 'core/examen/form.html', {
+        'form': form,
+        'title': 'Créer un examen'
+    })
+
+@login_required
+@permission_required('core.change_examen', raise_exception=True)
+def examen_update(request, pk):
+    examen = get_object_or_404(Examen, pk=pk)
+    
+    if request.method == 'POST':
+        form = ExamenForm(request.POST, instance=examen)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Examen mis à jour avec succès!')
+            return redirect('examen_list')
+    else:
+        form = ExamenForm(instance=examen)
+    
+    return render(request, 'core/examen/form.html', {
+        'form': form,
+        'title': 'Modifier l\'examen',
+        'examen': examen
+    })
+
+@login_required
+@permission_required('core.delete_examen', raise_exception=True)
+def examen_delete(request, pk):
+    examen = get_object_or_404(Examen, pk=pk)
+    
+    if request.method == 'POST':
+        examen.delete()
+        messages.success(request, 'Examen supprimé avec succès!')
+        return redirect('examen_list')
+    
+    return render(request, 'core/examen/confirm_delete.html', {
+        'examen': examen
+    })
+
+@login_required
+@permission_required('core.view_examen', raise_exception=True)
+def examen_detail1(request, pk):
+    examen = get_object_or_404(
+        Examen.objects.select_related(
+            'ue', 'annee_academique', 'session', 
+            'salle', 'surveillant', 'created_by'
+        ), 
+        pk=pk
+    )
+    
+    # Récupérer les inscriptions pour cet examen
+    inscriptions = InscriptionUE.objects.filter(
+        ue=examen.ue,
+        annee_academique=examen.annee_academique,
+        est_autorise_examen=True
+    ).select_related('etudiant')
+    
+    # Récupérer les contrôles d'accès pour cet examen
+    controles = ControleAcces.objects.filter(examen=examen).select_related('etudiant', 'scanned_by')
+    
+    # Récupérer les justificatifs pour cet examen
+    justificatifs = JustificatifAbsence.objects.filter(examen=examen).select_related('etudiant', 'traite_par')
+    
+    return render(request, 'core/examen/detail.html', {
+        'examen': examen,
+        'inscriptions': inscriptions,
+        'controles': controles,
+        'justificatifs': justificatifs
+    })
+
+
+
+
+# ============== Operations ==============
+@login_required
+def Operations(request):
+    """Operations avec statistiques"""
+    
+    # Statistiques générales
+    stats = {
+        'total_etudiants': Etudiant.objects.count(),
+        'total_ues': UE.objects.count(),
+        'total_examens': Examen.objects.count(),
+        'total_salles': Salle.objects.count(),
+        'paiements_regles': Paiement.objects.filter(est_regle=True).count(),
+        'paiements_en_attente': Paiement.objects.filter(est_regle=False).count(),
+        'justificatifs_en_attente': JustificatifAbsence.objects.filter(statut='en_attente').count(),
+    }
+    
+    # Examens à venir (dans les 7 prochains jours)
+    date_limit = timezone.now().date() + datetime.timedelta(days=7)
+    examens_a_venir = Examen.objects.filter(
+        date__gte=timezone.now().date(),
+        date__lte=date_limit
+    ).order_by('date', 'heure_debut')[:5]
+    
+    # Derniers contrôles d'accès
+    derniers_controles = ControleAcces.objects.all().order_by('-date_scan')[:10]
+    
+    # Derniers justificatifs déposés
+    derniers_justificatifs = JustificatifAbsence.objects.all().order_by('-date_depot')[:10]
+    
+    return render(request, 'core/operations.html', {
+        'stats': stats,
+        'examens_a_venir': examens_a_venir,
+        'derniers_controles': derniers_controles,
+        'derniers_justificatifs': derniers_justificatifs,
+    })

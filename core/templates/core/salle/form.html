@@ -1,0 +1,197 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-4 mb-3">{{ title }}</h1>{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'salle_list' %}"><h2>Retour</h2></a>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'salle_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-door-closed"></i> {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.code.id_for_label }}" class="form-label">
+                            Code de la salle <span class="text-danger">*</span>
+                        </label>
+                        {{ form.code }}
+                        {% if form.code.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.code.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Code unique identifiant la salle (ex: S1, S2, AMPHI_A)
+                        </small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.capacite.id_for_label }}" class="form-label">
+                                    Capacité <span class="text-danger">*</span>
+                                </label>
+                                {{ form.capacite }}
+                                {% if form.capacite.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.capacite.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Nombre maximum de places
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.batiment.id_for_label }}" class="form-label">
+                                    Bâtiment
+                                </label>
+                                {{ form.batiment }}
+                                {% if form.batiment.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.batiment.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.etage.id_for_label }}" class="form-label">
+                                    Étage
+                                </label>
+                                {{ form.etage }}
+                                {% if form.etage.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.etage.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if object %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Informations :</strong><br>
+                        <small>
+                            Créée le : {{ object.date_creation|date:"d/m/Y H:i" }}<br>
+                            Dernière modification : {{ object.date_modification|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    
+                    <!-- Examens associés -->
+                    {% with examens=object.examen_set.all %}
+                    {% if examens %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-calendar-alt"></i>
+                        <strong>Attention :</strong> Cette salle est utilisée pour {{ examens.count }} examen(s)
+                        <a href="#" class="float-end" data-bs-toggle="collapse" data-bs-target="#examensList">
+                            Voir les détails
+                        </a>
+                        <div class="collapse mt-2" id="examensList">
+                            <ul class="mb-0">
+                                {% for examen in examens|slice:":5" %}
+                                <li>{{ examen.ue.code }} - {{ examen.date|date:"d/m/Y" }} {{ examen.heure_debut|time:"H:i" }}</li>
+                                {% endfor %}
+                                {% if examens.count > 5 %}
+                                <li>... et {{ examens.count|add:"-5" }} autre(s)</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'salle_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if object %}Mettre à jour{% else %}Créer la salle{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Capacity Guide -->
+        <div class="card mt-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-lightbulb"></i> Guide de capacité</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li><strong>Petite salle :</strong> 20-50 places</li>
+                    <li><strong>Salle moyenne :</strong> 50-100 places</li>
+                    <li><strong>Grande salle :</strong> 100-200 places</li>
+                    <li><strong>Amphithéâtre :</strong> 200+ places</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input.form-control.is-invalid {
+        border-color: #dc3545;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        // Add form-control class to all form elements
+        $('input, select').addClass('form-control');
+        
+        // Show errors
+        {% for field in form %}
+            {% if field.errors %}
+            $('#{{ field.id_for_label }}').addClass('is-invalid');
+            {% endif %}
+        {% endfor %}
+        
+        // Focus on code field for new rooms
+        {% if not object %}
+        $('#id_code').focus();
+        {% endif %}
+    });
+</script>
+{% endblock %}

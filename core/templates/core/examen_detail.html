@@ -1,9 +1,9 @@
 {% extends "base_dashboard.html" %}
 
 {% block title %}Détail examen - {{ examen.ue.code }}{% endblock %}
-{% block page_title %}Détail de l'examen{% endblock %}
+{% block page_title %}<h1 class="display-4 mb-3">Détail de l'examen - {{ examen.ue.code }}</h1>{% endblock %}
 
-{% block dashboard_content %}
+{% block content %}
 <div class="row mb-4">
     <!-- Informations de l'examen -->
     <div class="col-lg-8">

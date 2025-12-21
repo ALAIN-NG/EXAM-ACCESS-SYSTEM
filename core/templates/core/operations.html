@@ -1,0 +1,250 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-3 mb-3">Opérations</h1>{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Statistiques -->
+    <div class="col-md-3">
+        <a href="{% url 'etudiant_list' %}" class="text-black">
+            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        
+                        <h2 class="mb-0">{{ stats.total_etudiants }}</h2>
+                        
+                        <p class="mb-0">Étudiants</p>
+                    
+                    </div>
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{% url 'ue_list' %}" class="text-black">
+            <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ stats.total_ues }}</h2>
+                        <p class="mb-0">Unités d'Enseignement</p>
+                    </div>
+                    <i class="fas fa-university"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{% url 'examen_list1' %}" class="text-black">
+            <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ stats.total_examens }}</h2>
+                        <p class="mb-0">Examens</p>
+                    </div>
+                    <i class="fas fa-file-alt"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+    
+    <div class="col-md-3">
+        <a href="{% url 'salle_list' %}" class="text-black">
+            <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ stats.total_salles }}</h2>
+                        <p class="mb-0">Salles</p>
+                    </div>
+                    <i class="fas fa-door-closed"></i>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Actions rapides -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-bolt"></i> Actions rapides</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'annee_create' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i><br>
+                            <small>Nouvelle Année</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'salle_create' %}" class="btn btn-warning w-100">
+                            <i class="fas fa-plus"></i><br>
+                            <small>Nouvel salle</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'examen_create' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i><br>
+                            <small>Nouvel examen</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'etudiant_create' %}" class="btn btn-success w-100">
+                            <i class="fas fa-user-plus"></i><br>
+                            <small>Nouvel étudiant</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'paiement_create' %}" class="btn btn-danger w-100">
+                            <i class="fas fa-money-bill"></i><br>
+                            <small>Enregistrer paiement</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'inscription_create' %}" class="btn btn-secondary w-100">
+                            <i class="fas fa-edit"></i><br>
+                            <small>Inscrire étudiant</small>
+                        </a>
+                    </div>
+
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'filiere_create' %}" class="btn btn-warning w-100">
+                            <i class="fas fa-plus"></i><br>
+                            <small>Nouvel filiere</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'niveau_create' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus"></i><br>
+                            <small>Nouvel niveau</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'session_create' %}" class="btn btn-success w-100">
+                            <i class="fas fa-user-plus"></i><br>
+                            <small>Nouvel session</small>
+                        </a>
+                    </div>
+                    <div class="col-md-2 col-6 mb-3">
+                        <a href="{% url 'ue_create' %}" class="btn btn-danger w-100">
+                            <i class="fas fa-money-bill"></i><br>
+                            <small>Nouvel UE</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+
+<div class="row">
+    <!-- Examens à venir -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-calendar-alt"></i> Examens à venir</h5>
+            </div>
+            <div class="card-body">
+                {% if examens_a_venir %}
+                    <div class="list-group">
+                        {% for examen in examens_a_venir %}
+                        <a href="{% url 'examen_detail' examen.pk %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ examen.ue.code }}</h6>
+                                <small>{{ examen.date }}</small>
+                            </div>
+                            <p class="mb-1">{{ examen.ue.intitule }}</p>
+                            <small>{{ examen.heure_debut }} - {{ examen.heure_fin }} | {{ examen.salle.code }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Aucun examen prévu dans les 7 prochains jours</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Derniers contrôles d'accès -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-qrcode"></i> Derniers contrôles d'accès</h5>
+            </div>
+            <div class="card-body">
+                {% if derniers_controles %}
+                    <div class="list-group">
+                        {% for controle in derniers_controles %}
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ controle.etudiant.matricule }}</h6>
+                                <span class="badge {% if controle.autorise %}bg-success{% else %}bg-danger{% endif %}">
+                                    {% if controle.autorise %}AUTORISÉ{% else %}REFUSÉ{% endif %}
+                                </span>
+                            </div>
+                            <p class="mb-1">{{ controle.etudiant.nom }} {{ controle.etudiant.prenom }}</p>
+                            <small>{{ controle.examen.ue.code }} | {{ controle.date_scan|date:"H:i" }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Aucun contrôle d'accès récent</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<br>
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-money-bill-wave"></i> Paiements</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <span>Réglés</span>
+                    <span class="badge bg-success">{{ stats.paiements_regles }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>En attente</span>
+                    <span class="badge bg-warning">{{ stats.paiements_en_attente }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-warning text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-file-medical"></i> Justificatifs</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span>En attente de traitement</span>
+                    <span class="badge bg-warning">{{ stats.justificatifs_en_attente }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-calendar-day"></i> Aujourd'hui</h5>
+            </div>
+            <div class="card-body">
+                <h6>{{ today|date:"l d F Y" }}</h6>
+                <p class="mb-0">Bienvenue sur le système de gestion des examens</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

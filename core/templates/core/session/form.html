@@ -1,0 +1,264 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'session_list' %}">Sessions d'examen</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'session_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-week"></i> {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.nom.id_for_label }}" class="form-label">
+                            Nom de la session <span class="text-danger">*</span>
+                        </label>
+                        {{ form.nom }}
+                        {% if form.nom.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.nom.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Ex: "Session Normale 2024-2025", "Session Rattrapage Janvier 2025"
+                        </small>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.type_session.id_for_label }}" class="form-label">
+                                    Type de session <span class="text-danger">*</span>
+                                </label>
+                                {{ form.type_session }}
+                                {% if form.type_session.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.type_session.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.annee_academique.id_for_label }}" class="form-label">
+                                    Année académique <span class="text-danger">*</span>
+                                </label>
+                                {{ form.annee_academique }}
+                                {% if form.annee_academique.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.annee_academique.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.date_debut.id_for_label }}" class="form-label">
+                                    Date de début <span class="text-danger">*</span>
+                                </label>
+                                {{ form.date_debut }}
+                                {% if form.date_debut.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.date_debut.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.date_fin.id_for_label }}" class="form-label">
+                                    Date de fin <span class="text-danger">*</span>
+                                </label>
+                                {{ form.date_fin }}
+                                {% if form.date_fin.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.date_fin.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.active }}
+                            <label class="form-check-label" for="{{ form.active.id_for_label }}">
+                                <strong>Session active</strong>
+                            </label>
+                        </div>
+                        {% if form.active.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.active.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Seule une session peut être active à la fois. Les examens ne peuvent être créés que dans une session active.
+                        </small>
+                    </div>
+                    
+                    {% if object %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Informations :</strong><br>
+                        <small>
+                            Créée le : {{ object.date_creation|date:"d/m/Y H:i" }}<br>
+                            Dernière modification : {{ object.date_modification|date:"d/m/Y H:i" }}<br>
+                            Créée par : {{ object.created_by.get_full_name|default:object.created_by.username }}
+                        </small>
+                    </div>
+                    
+                    <!-- Examens associés -->
+                    {% with examens=object.examen_set.all %}
+                    {% if examens %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-calendar-alt"></i>
+                        <strong>{{ examens.count }} examen(s)</strong> sont programmés dans cette session.
+                        <a href="#" class="float-end" data-bs-toggle="collapse" data-bs-target="#examensList">
+                            Voir les détails
+                        </a>
+                        <div class="collapse mt-2" id="examensList">
+                            <ul class="mb-0">
+                                {% for examen in examens|slice:":5" %}
+                                <li>{{ examen.ue.code }} - {{ examen.date|date:"d/m/Y" }} {{ examen.heure_debut|time:"H:i" }}</li>
+                                {% endfor %}
+                                {% if examens.count > 5 %}
+                                <li>... et {{ examens.count|add:"-5" }} autre(s)</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'session_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if object %}Mettre à jour{% else %}Créer la session{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Session Types Info -->
+        <div class="card mt-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Types de sessions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="alert alert-primary">
+                            <h6><i class="fas fa-file-alt"></i> Session Normale</h6>
+                            <p class="mb-0">Session principale pour tous les étudiants réguliers.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-redo"></i> Session de Rattrapage</h6>
+                            <p class="mb-0">Session pour les étudiants en échec ou absents à la session normale.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="date"].form-control.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        // Add form-control class to all form elements
+        $('input, select').addClass('form-control');
+        
+        // Style the switch
+        $('.form-check-input').removeClass('form-control');
+        
+        // Show errors
+        {% for field in form %}
+            {% if field.errors %}
+            $('#{{ field.id_for_label }}').addClass('is-invalid');
+            {% endif %}
+        {% endfor %}
+        
+        // Date validation
+        $('#id_date_fin').on('change', function() {
+            var dateDebut = $('#id_date_debut').val();
+            var dateFin = $(this).val();
+            
+            if (dateDebut && dateFin && dateFin < dateDebut) {
+                alert('La date de fin doit être après la date de début!');
+                $(this).val('');
+            }
+        });
+        
+        // Auto-generate name based on type and year
+        $('#id_type_session, #id_annee_academique').on('change', function() {
+            var type = $('#id_type_session').val();
+            var annee = $('#id_annee_academique option:selected').text();
+            
+            if (type && annee && !$('#id_nom').val()) {
+                var typeDisplay = type === 'normale' ? 'Session Normale' : 'Session de Rattrapage';
+                $('#id_nom').val(typeDisplay + ' ' + annee);
+            }
+        });
+    });
+</script>
+{% endblock %}

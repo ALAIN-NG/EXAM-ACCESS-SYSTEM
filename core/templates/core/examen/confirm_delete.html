@@ -1,0 +1,142 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-4 mb-3">Confirmer la suppression de l'examen</h1>{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'examen_list' %}">Examens</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Suppression</li>
+    </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression de l'examen
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Êtes-vous sûr de vouloir supprimer cet examen ?</p>
+                
+                <div class="alert alert-warning">
+                    <strong>Attention :</strong> Cette action est irréversible. 
+                    <ul class="mb-0 mt-2">
+                        <li>Tous les contrôles d'accès associés à cet examen seront supprimés</li>
+                        <li>Tous les justificatifs d'absence liés à cet examen seront supprimés</li>
+                        <li>Les statistiques d'association avec cette session seront perdues</li>
+                    </ul>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h6 class="mb-0">Détails de l'examen :</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>UE :</strong></p>
+                                <p class="ms-3">{{ examen.ue.code }} - {{ examen.ue.intitule }}</p>
+                                
+                                <p class="mb-2"><strong>Date et horaire :</strong></p>
+                                <p class="ms-3">
+                                    {{ examen.date|date:"l d F Y" }}<br>
+                                    De {{ examen.heure_debut|time:"H:i" }} à {{ examen.heure_fin|time:"H:i" }}
+                                    <span class="badge bg-info ms-2">{{ examen.duree }} minutes</span>
+                                </p>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Session :</strong></p>
+                                <p class="ms-3">
+                                    {{ examen.session.nom|default:"Non défini" }}
+                                    <span class="badge {% if examen.type_examen == 'normal' %}bg-success{% else %}bg-warning{% endif %} ms-2">
+                                        {{ examen.get_type_examen_display }}
+                                    </span>
+                                </p>
+                                
+                                <p class="mb-2"><strong>Salle :</strong></p>
+                                <p class="ms-3">
+                                    {% if examen.salle %}
+                                    {{ examen.salle.code }} ({{ examen.salle.capacite }} places)
+                                    {% if examen.salle.batiment %}
+                                    <br><small class="text-muted">Bâtiment {{ examen.salle.batiment }}{% if examen.salle.etage %}, étage {{ examen.salle.etage }}{% endif %}</small>
+                                    {% endif %}
+                                    {% else %}
+                                    <span class="text-danger">Non attribuée</span>
+                                    {% endif %}
+                                </p>
+                                
+                                <p class="mb-2"><strong>Surveillant :</strong></p>
+                                <p class="ms-3">
+                                    {% if examen.surveillant %}
+                                    {{ examen.surveillant.get_full_name|default:examen.surveillant.username }}
+                                    {% else %}
+                                    <span class="text-warning">Non assigné</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <p class="mb-2"><strong>Année académique :</strong></p>
+                                <p class="ms-3">{{ examen.annee_academique.code }}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Statut de l'examen -->
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <p class="mb-2"><strong>Statut actuel :</strong></p>
+                                <div class="ms-3">
+                                    {% if examen.est_termine %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-check-circle"></i> Terminé
+                                    </span>
+                                    {% elif examen.est_en_cours %}
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock"></i> En cours
+                                    </span>
+                                    {% elif examen.est_a_venir %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-calendar-alt"></i> À venir
+                                    </span>
+                                    {% endif %}
+                                    <small class="text-muted ms-2">
+                                        ({{ examen.statut }})
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'examen_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Retour à la liste
+                        </a>
+                        <div>
+                            <a href="{% url 'examen_detail' examen.pk %}" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-eye me-1"></i> Voir détails
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-1"></i> Confirmer la suppression
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

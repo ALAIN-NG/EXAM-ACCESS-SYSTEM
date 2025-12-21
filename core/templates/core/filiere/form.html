@@ -1,0 +1,92 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'filiere_list' %}">Filieres</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'filiere_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ title }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.code.id_for_label }}" class="form-label">
+                            Code de la filière *
+                        </label>
+                        {{ form.code }}
+                        {% if form.code.help_text %}
+                        <div class="form-text">{{ form.code.help_text }}</div>
+                        {% endif %}
+                        {% if form.code.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.code.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.nom.id_for_label }}" class="form-label">
+                            Nom de la filière *
+                        </label>
+                        {{ form.nom }}
+                        {% if form.nom.help_text %}
+                        <div class="form-text">{{ form.nom.help_text }}</div>
+                        {% endif %}
+                        {% if form.nom.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.nom.errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'filiere_list' %}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if filiere %}Mettre à jour{% else %}Créer{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('#{{ form.code.id_for_label }}').addClass('form-control');
+        $('#{{ form.nom.id_for_label }}').addClass('form-control');
+        
+        // Convertir le code en majuscules
+        $('#{{ form.code.id_for_label }}').on('input', function() {
+            $(this).val($(this).val().toUpperCase());
+        });
+    });
+</script>
+{% endblock %}

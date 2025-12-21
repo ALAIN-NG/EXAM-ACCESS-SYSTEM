@@ -1,0 +1,50 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'annee_list' %}">Années Académiques</a></li>
+<li class="breadcrumb-item active">Supprimer</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Êtes-vous sûr de vouloir supprimer cette année académique ?</p>
+                
+                <div class="alert alert-warning">
+                    <strong>Attention :</strong> Cette action est irréversible. Tous les examens, sessions et inscriptions associés à cette année seront également affectés.
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Détails de l'année académique :</h6>
+                        <p class="mb-1"><strong>Code :</strong> {{ annee.code }}</p>
+                        <p class="mb-1"><strong>Statut :</strong> {% if annee.active %}Active{% else %}Inactive{% endif %}</p>
+                        <p class="mb-0"><strong>Date création :</strong> {{ annee.date_creation|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'annee_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmer la suppression
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

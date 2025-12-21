@@ -1,0 +1,128 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Années Académiques{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Années Académiques</li>
+{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex">
+    <!-- Search Form -->
+    <form method="get" class="me-3 search-box">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Rechercher une année..." value="{{ query|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+    
+    <!-- Create Button -->
+    <a href="{% url 'annee_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouvelle année
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Statut</th>
+                        <th>Date création</th>
+                        <th>Date modification</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for annee in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ annee.code }}</strong>
+                        </td>
+                        <td>
+                            {% if annee.active %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ annee.date_creation|date:"d/m/Y H:i" }}</td>
+                        <td>{{ annee.date_modification|date:"d/m/Y H:i" }}</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'annee_update' annee.pk %}" class="btn btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'annee_delete' annee.pk %}" class="btn btn-danger confirm-delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                        &laquo;
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                        &raquo;
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        <!-- Stats -->
+        <div class="text-muted">
+            Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} éléments
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+            <h4>Aucune année académique trouvée</h4>
+            <p class="text-muted">{% if query %}Aucun résultat pour "{{ query }}"{% else %}Commencez par ajouter une année académique{% endif %}</p>
+            {% if not query %}
+            <a href="{% url 'annee_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Ajouter la première
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

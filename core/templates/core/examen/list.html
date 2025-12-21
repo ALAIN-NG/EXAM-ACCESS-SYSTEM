@@ -1,0 +1,245 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %} <h1 class="display-4 mb-3">Gestion des Examens</h1>{% endblock %}
+
+
+{% block content %}
+<div class="d-flex">
+    <!-- Search Form -->
+    <form method="get" class="me-3 search-box">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Rechercher par UE, salle..." value="{{ query|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+    
+    <!-- Filters Dropdown -->
+    <div class="dropdown me-2">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-filter"></i> Filtres
+        </button>
+        <div class="dropdown-menu p-3" style="min-width: 350px;">
+            <form method="get">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                
+                <div class="mb-3">
+                    <label class="form-label">UE</label>
+                    <select name="ue" class="form-select">
+                        <option value="">Toutes les UE</option>
+                        {% for ue in ues %}
+                        <option value="{{ ue.id }}" {% if selected_ue == ue.id|stringformat:"i" %}selected{% endif %}>
+                            {{ ue.code }} - {{ ue.intitule|truncatechars:25 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Session</label>
+                    <select name="session" class="form-select">
+                        <option value="">Toutes les sessions</option>
+                        {% for session in sessions %}
+                        <option value="{{ session.id }}" {% if selected_session == session.id|stringformat:"i" %}selected{% endif %}>
+                            {{ session.nom|truncatechars:30 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Date début</label>
+                            <input type="date" name="date_from" class="form-control" value="{{ date_from|default:'' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Date fin</label>
+                            <input type="date" name="date_to" class="form-control" value="{{ date_to|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">Appliquer</button>
+                    <a href="." class="btn btn-secondary btn-sm">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Create Button -->
+    <a href="{% url 'examen_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouvel examen
+    </a>
+</div>
+<br><br>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Liste des examens</h5>
+        <span class="badge bg-secondary">{{ page_obj.paginator.count }} examen(s)</span>
+    </div>
+    
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>UE</th>
+                        <th>Date & Heure</th>
+                        <th>Salle</th>
+                        <th>Session</th>
+                        <th>Surveillant</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for examen in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ examen.ue.code }}</strong><br>
+                            <small class="text-muted">{{ examen.ue.intitule|truncatechars:30 }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ examen.date|date:"d/m/Y" }}</strong><br>
+                            <small class="text-muted">{{ examen.heure_debut|time:"H:i" }} - {{ examen.heure_fin|time:"H:i" }}</small>
+                        </td>
+                        <td>
+                            {% if examen.salle %}
+                            <span class="badge bg-info">{{ examen.salle.code }}</span><br>
+                            <small>{{ examen.salle.capacite }} places</small>
+                            {% else %}
+                            <span class="badge bg-warning">Non assignée</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{% if examen.session.type_session == 'normale' %}primary{% else %}warning{% endif %}">
+                                {{ examen.session.nom|truncatechars:20 }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if examen.surveillant %}
+                            {{ examen.surveillant.get_full_name|default:examen.surveillant.username }}
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if examen.statut == 'termine' %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-check-circle"></i> Terminé
+                            </span>
+                            {% elif examen.statut == 'en_cours' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-play-circle"></i> En cours
+                            </span>
+                            {% else %}
+                            <span class="badge bg-primary">
+                                <i class="fas fa-clock"></i> À venir
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'examen_detail' examen.pk %}" class="btn btn-info" title="Détails">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                {% if user.groups.all.0.name == 'Surveillant' or user.is_staff %}
+                                <a href="{% url 'scan_examen' examen.id %}" 
+                                    class="btn btn-outline-success" 
+                                    title="Scanner">
+                                    <i class="fas fa-qrcode"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'examen_update' examen.pk %}" class="btn btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'examen_delete' examen.pk %}" class="btn btn-danger confirm-delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_ue %}&ue={{ selected_ue }}{% endif %}{% if selected_session %}&session={{ selected_session }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_ue %}&ue={{ selected_ue }}{% endif %}{% if selected_session %}&session={{ selected_session }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_ue %}&ue={{ selected_ue }}{% endif %}{% if selected_session %}&session={{ selected_session }}{% endif %}{% if date_from %}&date_from={{ date_from }}{% endif %}{% if date_to %}&date_to={{ date_to }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        <!-- Stats -->
+        <div class="text-muted mt-3">
+            <small>
+                <i class="fas fa-info-circle"></i>
+                Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} examen(s)
+                {% if query or selected_ue or selected_session or date_from or date_to %}
+                <span class="ms-3">
+                    <a href="." class="text-decoration-none">
+                        <i class="fas fa-times"></i> Effacer les filtres
+                    </a>
+                </span>
+                {% endif %}
+            </small>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+            <h4>Aucun examen trouvé</h4>
+            <p class="text-muted">
+                {% if query or selected_ue or selected_session or date_from or date_to %}
+                Aucun résultat pour votre recherche.
+                {% else %}
+                Commencez par créer un examen.
+                {% endif %}
+            </p>
+            {% if not query and not selected_ue and not selected_session and not date_from and not date_to %}
+            <a href="{% url 'examen_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Créer le premier examen
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'inscription_list' %}">Inscriptions UE</a></li>
+<li class="breadcrumb-item active">Supprimer</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Êtes-vous sûr de vouloir supprimer cette inscription UE ?</p>
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning"></i>
+                    <strong>Attention :</strong> Cette action est irréversible. L'étudiant ne pourra plus passer l'examen de cette UE.
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Détails de l'inscription :</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="30%">ID :</th>
+                                <td>{{ inscription.id }}</td>
+                            </tr>
+                            <tr>
+                                <th>Étudiant :</th>
+                                <td>
+                                    <strong>{{ inscription.etudiant.matricule }}</strong><br>
+                                    {{ inscription.etudiant.nom }} {{ inscription.etudiant.prenom }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>UE :</th>
+                                <td>
+                                    <strong>{{ inscription.ue.code }}</strong><br>
+                                    {{ inscription.ue.intitule }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Année académique :</th>
+                                <td>{{ inscription.annee_academique.code }}</td>
+                            </tr>
+                            <tr>
+                                <th>Date inscription :</th>
+                                <td>{{ inscription.date_inscription|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Autorisé examen :</th>
+                                <td>
+                                    {% if inscription.est_autorise_examen %}
+                                    <span class="badge bg-success">Oui</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Non</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle"></i>
+                    <strong>Conséquences :</strong>
+                    <ul class="mb-0">
+                        <li>L'étudiant ne pourra plus accéder à cette UE</li>
+                        <li>Tous les contrôles d'accès associés seront affectés</li>
+                        <li>Cette action ne peut pas être annulée</li>
+                    </ul>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'inscription_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmer la suppression
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

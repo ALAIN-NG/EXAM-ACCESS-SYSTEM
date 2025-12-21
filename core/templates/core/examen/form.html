@@ -1,0 +1,300 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-4 mb-3">{{ title }}</h1>{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'examen_list' %}"><h2>Retour</h2></a>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'examen_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-alt"></i> {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.ue.id_for_label }}" class="form-label">
+                                    UE <span class="text-danger">*</span>
+                                </label>
+                                {{ form.ue }}
+                                {% if form.ue.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.ue.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.annee_academique.id_for_label }}" class="form-label">
+                                    Année académique <span class="text-danger">*</span>
+                                </label>
+                                {{ form.annee_academique }}
+                                {% if form.annee_academique.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.annee_academique.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.session.id_for_label }}" class="form-label">
+                                    Session <span class="text-danger">*</span>
+                                </label>
+                                {{ form.session }}
+                                {% if form.session.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.session.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.type_examen.id_for_label }}" class="form-label">
+                                    Type d'examen <span class="text-danger">*</span>
+                                </label>
+                                {{ form.type_examen }}
+                                {% if form.type_examen.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.type_examen.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.date.id_for_label }}" class="form-label">
+                                    Date <span class="text-danger">*</span>
+                                </label>
+                                {{ form.date }}
+                                {% if form.date.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.date.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="{{ form.heure_debut.id_for_label }}" class="form-label">
+                                    Heure début <span class="text-danger">*</span>
+                                </label>
+                                {{ form.heure_debut }}
+                                {% if form.heure_debut.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.heure_debut.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <div class="mb-3">
+                                <label for="{{ form.heure_fin.id_for_label }}" class="form-label">
+                                    Heure fin <span class="text-danger">*</span>
+                                </label>
+                                {{ form.heure_fin }}
+                                {% if form.heure_fin.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.heure_fin.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.salle.id_for_label }}" class="form-label">
+                                    Salle
+                                </label>
+                                {{ form.salle }}
+                                {% if form.salle.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.salle.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Sélectionnez une salle disponible à cette date et heure
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.surveillant.id_for_label }}" class="form-label">
+                                    Surveillant
+                                </label>
+                                {{ form.surveillant }}
+                                {% if form.surveillant.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.surveillant.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if object %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Informations :</strong><br>
+                        <small>
+                            Créé le : {{ object.date_creation|date:"d/m/Y H:i" }}<br>
+                            Dernière modification : {{ object.date_modification|date:"d/m/Y H:i" }}<br>
+                            Créé par : {{ object.created_by.get_full_name|default:object.created_by.username }}
+                        </small>
+                    </div>
+                    
+                    <!-- Inscriptions associées -->
+                    {% with inscriptions=object.inscriptions_count %}
+                    {% if inscriptions %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-users"></i>
+                        <strong>{{ inscriptions }} étudiant(s)</strong> sont inscrits à cet examen.
+                    </div>
+                    {% endif %}
+                    {% endwith %}
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'examen_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if object %}Mettre à jour{% else %}Créer l'examen{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Room Availability Info -->
+        <div class="card mt-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-calendar-check"></i> Vérification des disponibilités</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">Le système vérifie automatiquement :</p>
+                <ul class="mb-0">
+                    <li>Conflits d'horaire dans la même salle</li>
+                    <li>Heure de fin > Heure de début</li>
+                    <li>Disponibilité du surveillant</li>
+                    <li>Dates dans la période de la session</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="date"].form-control.is-invalid,
+    input[type="time"].form-control.is-invalid {
+        border-color: #dc3545;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        // Add form-control class to all form elements
+        $('input, select').addClass('form-control');
+        
+        // Show errors
+        {% for field in form %}
+            {% if field.errors %}
+            $('#{{ field.id_for_label }}').addClass('is-invalid');
+            {% endif %}
+        {% endfor %}
+        
+        // Time validation
+        $('#id_heure_fin').on('change', function() {
+            var heureDebut = $('#id_heure_debut').val();
+            var heureFin = $(this).val();
+            
+            if (heureDebut && heureFin && heureFin <= heureDebut) {
+                alert('L\'heure de fin doit être après l\'heure de début!');
+                $(this).val('');
+            }
+        });
+        
+        // Auto-set type based on session
+        $('#id_session').on('change', function() {
+            var sessionId = $(this).val();
+            if (sessionId) {
+                // You could add AJAX to get session type
+                console.log('Session sélectionnée:', sessionId);
+            }
+        });
+        
+        // Check room availability (simplified)
+        function checkRoomAvailability() {
+            var date = $('#id_date').val();
+            var heureDebut = $('#id_heure_debut').val();
+            var heureFin = $('#id_heure_fin').val();
+            var salleId = $('#id_salle').val();
+            
+            if (date && heureDebut && heureFin && salleId) {
+                console.log('Vérification disponibilité salle...');
+                // AJAX call would go here
+            }
+        }
+        
+        $('#id_date, #id_heure_debut, #id_heure_fin, #id_salle').on('change', checkRoomAvailability);
+    });
+</script>
+{% endblock %}

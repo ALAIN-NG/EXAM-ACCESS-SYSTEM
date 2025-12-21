@@ -1,0 +1,220 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-4 mb-3">{{ title }}</h1>{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'etudiant_list' %}"><h2>Retour</h2></a>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'etudiant_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ title }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.matricule.id_for_label }}" class="form-label">
+                                Matricule *
+                            </label>
+                            {{ form.matricule }}
+                            <div class="form-text">Format: lettres majuscules et chiffres uniquement</div>
+                            {% if form.matricule.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.matricule.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.photo.id_for_label }}" class="form-label">
+                                Photo
+                            </label>
+                            {{ form.photo }}
+                            {% if etudiant and etudiant.photo %}
+                            <div class="form-text">
+                                <a href="{{ etudiant.photo.url }}" target="_blank">Voir la photo actuelle</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.nom.id_for_label }}" class="form-label">
+                                Nom *
+                            </label>
+                            {{ form.nom }}
+                            {% if form.nom.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.nom.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.prenom.id_for_label }}" class="form-label">
+                                Prénom *
+                            </label>
+                            {{ form.prenom }}
+                            {% if form.prenom.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.prenom.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                Email
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.email.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.telephone.id_for_label }}" class="form-label">
+                                Téléphone
+                            </label>
+                            {{ form.telephone }}
+                            {% if form.telephone.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.telephone.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.date_naissance.id_for_label }}" class="form-label">
+                                Date de naissance
+                            </label>
+                            {{ form.date_naissance }}
+                            {% if form.date_naissance.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.date_naissance.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.statut.id_for_label }}" class="form-label">
+                                Statut *
+                            </label>
+                            {{ form.statut }}
+                            {% if form.statut.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.statut.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.filiere.id_for_label }}" class="form-label">
+                                Filière
+                            </label>
+                            {{ form.filiere }}
+                            {% if form.filiere.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.filiere.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.niveau.id_for_label }}" class="form-label">
+                                Niveau
+                            </label>
+                            {{ form.niveau }}
+                            {% if form.niveau.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.niveau.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'etudiant_list' %}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if etudiant %}Mettre à jour{% else %}Créer{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('input:not([type=checkbox]), select, textarea').addClass('form-control');
+        
+        // Convertir le matricule en majuscules
+        $('#{{ form.matricule.id_for_label }}').on('input', function() {
+            $(this).val($(this).val().toUpperCase());
+        });
+        
+        // Convertir le nom et prénom en majuscules pour la première lettre
+        $('#{{ form.nom.id_for_label }}').on('blur', function() {
+            let value = $(this).val();
+            if (value) {
+                $(this).val(value.charAt(0).toUpperCase() + value.slice(1).toLowerCase());
+            }
+        });
+        
+        $('#{{ form.prenom.id_for_label }}').on('blur', function() {
+            let value = $(this).val();
+            if (value) {
+                $(this).val(value.charAt(0).toUpperCase() + value.slice(1).toLowerCase());
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -487,13 +487,21 @@
             <a href="{% url 'scan_interface' %}">
                 <i class="fas fa-qrcode"></i> Scanner étudiants
             </a>
-            {% endif %}
+            <a href="{% url 'operations' %}">
+                <i class="fas fa-tools"></i> Opérations
+            </a>
+            
             
             <a href="{% url 'examen_list' %}">
                 <i class="fas fa-calendar-alt"></i> Examens
             </a>
+            {% endif %}
             
             {% if user.groups.all.0.name == 'Etudiant' %}
+            <a href="{% url 'student_examens' %}">
+                <i class="fas fa-calendar-alt"></i> Mes Examens
+            </a>
+            
             <a href="{% url 'student_dashboard' %}">
                 <i class="fas fa-user-graduate"></i> Mon espace
             </a>
@@ -535,13 +543,22 @@
                     <a href="{% url 'scan_interface' %}">
                         <i class="fas fa-qrcode"></i> Scanner étudiants
                     </a>
-                    {% endif %}
+                    <a href="{% url 'operations' %}">
+                        <i class="fas fa-tools"></i> Opérations
+                    </a>
+                    
                     
                     <a href="{% url 'examen_list' %}">
                         <i class="fas fa-calendar-alt"></i> Examens
                     </a>
+                    {% endif %}
+                
                     
                     {% if user.groups.all.0.name == 'Etudiant' %}
+                    <a href="{% url 'student_examens' %}">
+                        <i class="fas fa-calendar-alt"></i> Mes Examens
+                    </a>
+
                     <a href="{% url 'student_dashboard' %}">
                         <i class="fas fa-user-graduate"></i> Mon espace
                     </a>

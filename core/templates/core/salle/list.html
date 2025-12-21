@@ -1,0 +1,163 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-4 mb-3">Gestion des Salles</h1>{% endblock %}
+
+
+{% block content %}
+<div class="d-flex">
+    <!-- Search Form -->
+    <form method="get" class="me-3 search-box">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Rechercher par code, bâtiment..." value="{{ query|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+    
+    <!-- Create Button -->
+    <a href="{% url 'salle_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouvelle salle
+    </a>
+</div>
+<br><br>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Liste des salles</h5>
+        <span class="badge bg-secondary">{{ page_obj.paginator.count }} salle(s)</span>
+    </div>
+    
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Code</th>
+                        <th>Bâtiment</th>
+                        <th>Étage</th>
+                        <th>Capacité</th>
+                        <th>Utilisation</th>
+                        <th>Date création</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for salle in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ salle.code }}</strong>
+                        </td>
+                        <td>{{ salle.batiment|default:"-" }}</td>
+                        <td>{{ salle.etage|default:"-" }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ salle.capacite }} places</span>
+                        </td>
+                        <td>
+                            {% with exam_count=salle.examen_set.count %}
+                            {% if exam_count > 0 %}
+                            <span class="badge bg-warning">{{ exam_count }} examen(s)</span>
+                            {% else %}
+                            <span class="badge bg-success">Disponible</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>{{ salle.date_creation|date:"d/m/Y" }}</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'salle_update' salle.pk %}" class="btn btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'salle_delete' salle.pk %}" class="btn btn-danger confirm-delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        <!-- Stats -->
+        <div class="text-muted mt-3">
+            <small>
+                <i class="fas fa-info-circle"></i>
+                Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} salle(s)
+            </small>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-door-closed fa-3x text-muted mb-3"></i>
+            <h4>Aucune salle trouvée</h4>
+            <p class="text-muted">
+                {% if query %}
+                Aucun résultat pour "{{ query }}"
+                {% else %}
+                Commencez par créer une salle.
+                {% endif %}
+            </p>
+            {% if not query %}
+            <a href="{% url 'salle_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Créer la première salle
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card stat-card bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Total salles</h6>
+                        <h3 class="mb-0">{{ page_obj.paginator.count }}</h3>
+                    </div>
+                    <i class="fas fa-door-closed"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

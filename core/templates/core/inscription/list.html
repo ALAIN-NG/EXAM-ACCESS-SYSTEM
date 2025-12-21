@@ -1,0 +1,288 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Gestion des Inscriptions UE{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Inscriptions UE</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Search Form -->
+    <form method="get" class="me-3 search-box">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Rechercher par matricule ou UE..." value="{{ query|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+    
+    <!-- Filters Dropdown -->
+    <div class="dropdown me-2">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-filter"></i> Filtres
+        </button>
+        <div class="dropdown-menu p-3" style="min-width: 300px;">
+            <form method="get">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Étudiant</label>
+                    <select name="etudiant" class="form-select">
+                        <option value="">Tous les étudiants</option>
+                        {% for etudiant in etudiants %}
+                        <option value="{{ etudiant.id }}" {% if selected_etudiant == etudiant.id|stringformat:"i" %}selected{% endif %}>
+                            {{ etudiant.matricule }} - {{ etudiant.nom }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">UE</label>
+                    <select name="ue" class="form-select">
+                        <option value="">Toutes les UE</option>
+                        {% for ue in ues %}
+                        <option value="{{ ue.id }}" {% if selected_ue == ue.id|stringformat:"i" %}selected{% endif %}>
+                            {{ ue.code }} - {{ ue.intitule|truncatechars:30 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Autorisation examen</label>
+                    <select name="autorise" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="1" {% if selected_autorise == '1' %}selected{% endif %}>Autorisé</option>
+                        <option value="0" {% if selected_autorise == '0' %}selected{% endif %}>Non autorisé</option>
+                    </select>
+                </div>
+                
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">Appliquer</button>
+                    <a href="." class="btn btn-secondary btn-sm">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Create Button -->
+    <a href="{% url 'inscription_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouvelle inscription
+    </a>
+</div>
+<br><br>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Liste des inscriptions UE</h5>
+        <span class="badge bg-secondary">{{ page_obj.paginator.count }} inscription(s)</span>
+    </div>
+    
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Étudiant</th>
+                        <th>UE</th>
+                        <th>Année académique</th>
+                        <th>Date inscription</th>
+                        <th>Autorisé examen</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inscription in page_obj %}
+                    <tr>
+                        <td>{{ inscription.id }}</td>
+                        <td>
+                            <strong>{{ inscription.etudiant.matricule }}</strong><br>
+                            <small class="text-muted">{{ inscription.etudiant.nom }} {{ inscription.etudiant.prenom }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ inscription.ue.code }}</strong><br>
+                            <small class="text-muted">{{ inscription.ue.intitule|truncatechars:30 }}</small>
+                        </td>
+                        <td>{{ inscription.annee_academique.code }}</td>
+                        <td>{{ inscription.date_inscription|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if inscription.est_autorise_examen %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check"></i> Oui
+                            </span>
+                            {% else %}
+                            <span class="badge bg-danger">
+                                <i class="fas fa-times"></i> Non
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'inscription_update' inscription.pk %}" class="btn btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'inscription_delete' inscription.pk %}" class="btn btn-danger confirm-delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_etudiant %}&etudiant={{ selected_etudiant }}{% endif %}{% if selected_ue %}&ue={{ selected_ue }}{% endif %}{% if selected_autorise %}&autorise={{ selected_autorise }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_etudiant %}&etudiant={{ selected_etudiant }}{% endif %}{% if selected_ue %}&ue={{ selected_ue }}{% endif %}{% if selected_autorise %}&autorise={{ selected_autorise }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_etudiant %}&etudiant={{ selected_etudiant }}{% endif %}{% if selected_ue %}&ue={{ selected_ue }}{% endif %}{% if selected_autorise %}&autorise={{ selected_autorise }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        <!-- Stats -->
+        <div class="text-muted mt-3">
+            <small>
+                <i class="fas fa-info-circle"></i>
+                Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} inscription(s)
+                {% if query or selected_etudiant or selected_ue or selected_autorise %}
+                <span class="ms-3">
+                    <a href="." class="text-decoration-none">
+                        <i class="fas fa-times"></i> Effacer les filtres
+                    </a>
+                </span>
+                {% endif %}
+            </small>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-book fa-3x text-muted mb-3"></i>
+            <h4>Aucune inscription trouvée</h4>
+            <p class="text-muted">
+                {% if query or selected_etudiant or selected_ue or selected_autorise %}
+                Aucun résultat pour votre recherche.
+                {% else %}
+                Commencez par créer une inscription UE.
+                {% endif %}
+            </p>
+            {% if not query and not selected_etudiant and not selected_ue and not selected_autorise %}
+            <a href="{% url 'inscription_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Créer la première inscription
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% comment %} <!-- Quick Stats -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Total</h6>
+                        <h3 class="mb-0">{{ page_obj.paginator.count }}</h3>
+                    </div>
+                    <i class="fas fa-book"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Autorisées</h6>
+                        <h3 class="mb-0">
+                            {% with autorisees=page_obj.paginator.object_list.filter.est_autorise_examen|yesno:"True" %}
+                            {{ autorisees.count|default:0 }}
+                            {% endwith %}
+                        </h3>
+                    </div>
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">Non autorisées</h6>
+                        {% comment %} <h3 class="mb-0">
+                            {% with non_autorisees=page_obj.paginator.object_list.filter.est_autorise_examen|no %}
+                            {{ non_autorisees.count|default:0 }}
+                            {% endwith %}
+                        </h3>
+                    </div>
+                    <i class="fas fa-times-circle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card stat-card bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-uppercase">UE disponibles</h6>
+                        <h3 class="mb-0">{{ ues.count }}</h3>
+                    </div>
+                    <i class="fas fa-university"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> {% endcomment %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Auto-submit filters on change
+        $('.dropdown-menu select').on('change', function() {
+            $(this).closest('form').submit();
+        });
+    });
+</script>
+{% endblock %}

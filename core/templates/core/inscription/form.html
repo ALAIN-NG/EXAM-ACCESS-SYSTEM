@@ -1,0 +1,192 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'inscription_list' %}">Inscriptions UE</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'inscription_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-edit"></i> {{ title }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.etudiant.id_for_label }}" class="form-label">
+                                    Étudiant <span class="text-danger">*</span>
+                                </label>
+                                {{ form.etudiant }}
+                                {% if form.etudiant.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.etudiant.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.ue.id_for_label }}" class="form-label">
+                                    Unité d'Enseignement <span class="text-danger">*</span>
+                                </label>
+                                {{ form.ue }}
+                                {% if form.ue.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.ue.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.annee_academique.id_for_label }}" class="form-label">
+                                    Année académique <span class="text-danger">*</span>
+                                </label>
+                                {{ form.annee_academique }}
+                                {% if form.annee_academique.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.annee_academique.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch mt-4">
+                                    {{ form.est_autorise_examen }}
+                                    <label class="form-check-label" for="{{ form.est_autorise_examen.id_for_label }}">
+                                        <strong>Autoriser pour l'examen</strong>
+                                    </label>
+                                </div>
+                                {% if form.est_autorise_examen.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.est_autorise_examen.errors %}
+                                    {{ error }}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    Si activé, l'étudiant pourra passer l'examen de cette UE
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if object %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Informations :</strong><br>
+                        <small>
+                            Créée le : {{ object.date_creation|date:"d/m/Y H:i" }}<br>
+                            Dernière modification : {{ object.date_modification|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'inscription_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i>
+                            {% if object %}Mettre à jour{% else %}Créer l'inscription{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Validation Rules -->
+        <div class="card mt-3">
+            <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fas fa-exclamation-circle"></i> Règles de validation</h6>
+            </div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    <li>L'étudiant doit être dans la même filière que l'UE</li>
+                    <li>L'étudiant doit être du même niveau que l'UE</li>
+                    <li>L'étudiant doit avoir réglé ses droits universitaires pour l'année académique</li>
+                    <li>Une inscription par UE, par étudiant et par année académique</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    select.form-control.is-invalid {
+        border-color: #dc3545;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(.375em + .1875rem) center;
+        background-size: calc(.75em + .375rem) calc(.75em + .375rem);
+    }
+    
+    .form-check-input:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        // Add form-control class to all form elements
+        $('select, input').addClass('form-control');
+        
+        // Style the switch
+        $('.form-check-input').removeClass('form-control');
+        
+        // Show errors
+        {% for field in form %}
+            {% if field.errors %}
+            $('#{{ field.id_for_label }}').addClass('is-invalid');
+            {% endif %}
+        {% endfor %}
+        
+        // Auto-update fields based on student selection
+        $('#id_etudiant').on('change', function() {
+            var etudiantId = $(this).val();
+            if (etudiantId) {
+                // You can add AJAX call here to filter UEs based on student's filiere
+                console.log('Étudiant sélectionné:', etudiantId);
+            }
+        });
+    });
+</script>
+{% endblock %}

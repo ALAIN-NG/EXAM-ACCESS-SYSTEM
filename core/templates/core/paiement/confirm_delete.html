@@ -1,0 +1,53 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'paiement_list' %}">Paiements</a></li>
+<li class="breadcrumb-item active">Supprimer</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Êtes-vous sûr de vouloir supprimer ce paiement ?</p>
+                
+                <div class="alert alert-warning">
+                    <strong>Attention :</strong> Cette action est irréversible. L'étudiant concerné ne pourra plus passer ses examens tant qu'un nouveau paiement ne sera pas enregistré.
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Détails du paiement :</h6>
+                        <p class="mb-1"><strong>Étudiant :</strong> {{ paiement.etudiant.matricule }} - {{ paiement.etudiant.nom }}</p>
+                        <p class="mb-1"><strong>Année académique :</strong> {{ paiement.annee_academique.code }}</p>
+                        <p class="mb-1"><strong>Montant attendu :</strong> {{ paiement.montant_attendu }} FCFA</p>
+                        <p class="mb-1"><strong>Montant payé :</strong> {{ paiement.montant }} FCFA</p>
+                        <p class="mb-1"><strong>Statut :</strong> {% if paiement.est_regle %}Réglé{% else %}Non réglé{% endif %}</p>
+                        <p class="mb-0"><strong>Date paiement :</strong> {{ paiement.date_paiement|date:"d/m/Y H:i"|default:"-" }}</p>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'paiement_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmer la suppression
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

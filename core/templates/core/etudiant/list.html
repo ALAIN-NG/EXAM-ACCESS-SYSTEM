@@ -1,0 +1,189 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}<h1 class="display-4 mb-3"> Étudiants </h1>{% endblock %}
+
+
+{% block content %}
+<div class="d-flex">
+    <!-- Search Form -->
+    <form method="get" class="me-3 search-box">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Rechercher un étudiant..." value="{{ query|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+    
+    <!-- Filtres -->
+    <div class="dropdown me-2">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-filter"></i> Filtres
+        </button>
+        <div class="dropdown-menu p-3" style="min-width: 300px;">
+            <form method="get">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                <div class="mb-3">
+                    <label for="filiere" class="form-label">Filière</label>
+                    <select name="filiere" id="filiere" class="form-select">
+                        <option value="">Toutes les filières</option>
+                        {% for filiere in filieres %}
+                        <option value="{{ filiere.id }}" {% if selected_filiere == filiere.id|stringformat:"s" %}selected{% endif %}>
+                            {{ filiere.code }} - {{ filiere.nom }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="statut" class="form-label">Statut</label>
+                    <select name="statut" id="statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        {% for statut_code, statut_label in statut_choices %}
+                        <option value="{{ statut_code }}" {% if selected_statut == statut_code %}selected{% endif %}>
+                            {{ statut_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">Appliquer</button>
+                    <a href="." class="btn btn-secondary btn-sm">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Create Button -->
+    <a href="{% url 'etudiant_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouvel étudiant
+    </a>
+</div>
+<br><br>
+
+
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Matricule</th>
+                        <th>Nom & Prénom</th>
+                        <th>Filière</th>
+                        <th>Niveau</th>
+                        <th>Statut</th>
+                        <th>Email</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for etudiant in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ etudiant.matricule }}</strong>
+                        </td>
+                        <td>
+                            {{ etudiant.nom }} {{ etudiant.prenom }}
+                        </td>
+                        <td>
+                            {% if etudiant.filiere %}
+                            <span class="badge bg-primary">{{ etudiant.filiere.code }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Non défini</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if etudiant.niveau %}
+                            <span class="badge bg-info">{{ etudiant.niveau.nom }}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Non défini</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if etudiant.statut == 'actif' %}
+                            <span class="badge bg-success">Actif</span>
+                            {% elif etudiant.statut == 'suspendu' %}
+                            <span class="badge bg-warning">Suspendu</span>
+                            {% elif etudiant.statut == 'exclu' %}
+                            <span class="badge bg-danger">Exclu</span>
+                            {% elif etudiant.statut == 'diplome' %}
+                            <span class="badge bg-info">Diplômé</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ etudiant.email|default:"-" }}</small>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'etudiant_detail' etudiant.pk %}" class="btn btn-info" title="Voir">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'etudiant_update' etudiant.pk %}" class="btn btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'etudiant_delete' etudiant.pk %}" class="btn btn-danger confirm-delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_filiere %}&filiere={{ selected_filiere }}{% endif %}{% if selected_statut %}&statut={{ selected_statut }}{% endif %}">
+                        &laquo;
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_filiere %}&filiere={{ selected_filiere }}{% endif %}{% if selected_statut %}&statut={{ selected_statut }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_filiere %}&filiere={{ selected_filiere }}{% endif %}{% if selected_statut %}&statut={{ selected_statut }}{% endif %}">
+                        &raquo;
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        <div class="text-muted">
+            Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} étudiants
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+            <h4>Aucun étudiant trouvé</h4>
+            <p class="text-muted">{% if query %}Aucun résultat pour "{{ query }}"{% else %}Commencez par ajouter un étudiant{% endif %}</p>
+            {% if not query %}
+            <a href="{% url 'etudiant_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Ajouter le premier
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

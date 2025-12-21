@@ -1,0 +1,179 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'paiement_list' %}">Paiements</a></li>
+<li class="breadcrumb-item active">{{ title }}</li>
+{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'paiement_list' %}" class="btn btn-secondary">
+    <i class="fas fa-arrow-left"></i> Retour à la liste
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ title }}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.etudiant.id_for_label }}" class="form-label">
+                                Étudiant *
+                            </label>
+                            {{ form.etudiant }}
+                            {% if form.etudiant.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.etudiant.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.annee_academique.id_for_label }}" class="form-label">
+                                Année académique *
+                            </label>
+                            {{ form.annee_academique }}
+                            {% if form.annee_academique.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.annee_academique.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.montant_attendu.id_for_label }}" class="form-label">
+                                Montant attendu (FCFA) *
+                            </label>
+                            {{ form.montant_attendu }}
+                            <div class="form-text">Montant total à payer</div>
+                            {% if form.montant_attendu.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.montant_attendu.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.montant.id_for_label }}" class="form-label">
+                                Montant payé (FCFA) *
+                            </label>
+                            {{ form.montant }}
+                            <div class="form-text">Montant effectivement payé</div>
+                            {% if form.montant.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.montant.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.est_regle }}
+                                <label class="form-check-label" for="{{ form.est_regle.id_for_label }}">
+                                    Paiement réglé
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.date_paiement.id_for_label }}" class="form-label">
+                                Date de paiement
+                            </label>
+                            {{ form.date_paiement }}
+                            {% if form.date_paiement.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.date_paiement.errors %}
+                                {{ error }}
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Calcul automatique -->
+                    <div class="alert alert-info" id="calculAlert" style="display: none;">
+                        <strong>Calcul :</strong>
+                        <span id="calculText"></span>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'paiement_list' %}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if paiement %}Mettre à jour{% else %}Enregistrer{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        $('input:not([type=checkbox]), select, textarea').addClass('form-control');
+        
+        // Calcul automatique
+        function calculerSolde() {
+            const montantAttendu = parseFloat($('#{{ form.montant_attendu.id_for_label }}').val()) || 0;
+            const montantPaye = parseFloat($('#{{ form.montant.id_for_label }}').val()) || 0;
+            
+            if (montantAttendu > 0) {
+                const solde = montantAttendu - montantPaye;
+                const pourcentage = (montantPaye / montantAttendu * 100).toFixed(1);
+                
+                let texte = '';
+                if (solde > 0) {
+                    texte = `Reste à payer: ${solde.toLocaleString()} FCFA (${pourcentage}% payé)`;
+                    $('#calculAlert').removeClass('alert-success alert-danger').addClass('alert-warning');
+                } else if (solde < 0) {
+                    texte = `Trop perçu: ${Math.abs(solde).toLocaleString()} FCFA`;
+                    $('#calculAlert').removeClass('alert-success alert-warning').addClass('alert-danger');
+                } else {
+                    texte = `Paiement complet (100% payé)`;
+                    $('#calculAlert').removeClass('alert-warning alert-danger').addClass('alert-success');
+                }
+                
+                $('#calculText').text(texte);
+                $('#calculAlert').show();
+            } else {
+                $('#calculAlert').hide();
+            }
+        }
+        
+        // Écouter les changements
+        $('#{{ form.montant_attendu.id_for_label }}, #{{ form.montant.id_for_label }}').on('input', calculerSolde);
+        
+        // Calcul initial
+        calculerSolde();
+    });
+</script>
+{% endblock %}

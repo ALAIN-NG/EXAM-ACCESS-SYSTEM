@@ -1,8 +1,11 @@
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from .models import Etudiant
-from .models import JustificatifAbsence
+from .models import (
+    AnneeAcademique, Filiere, Niveau, UE, Etudiant,
+    Paiement, InscriptionUE, Salle, SessionExamen, Examen,
+    JustificatifAbsence
+)
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
@@ -292,3 +295,233 @@ class UserProfileForm(forms.ModelForm):
             if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
                 raise ValidationError('Cette adresse email est déjà utilisée.')
         return email
+    
+
+
+class AnneeAcademiqueForm(forms.ModelForm):
+    class Meta:
+        model = AnneeAcademique
+        fields = ['code', 'active']
+        widgets = {
+            'code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: 2024-2025'
+            }),
+            'active': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }
+    
+    def clean_code(self):
+        code = self.cleaned_data['code']
+        if not len(code) == 9 and '-' in code:
+            raise ValidationError("Le format doit être AAAA-AAAA")
+        return code
+
+class FiliereForm(forms.ModelForm):
+    class Meta:
+        model = Filiere
+        fields = ['nom', 'code']
+        widgets = {
+            'nom': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nom de la filière'
+            }),
+            'code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Code abrégé (ex: INF)'
+            })
+        }
+
+class NiveauForm(forms.ModelForm):
+    class Meta:
+        model = Niveau
+        fields = ['nom', 'ordre']
+        widgets = {
+            'nom': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ex: L1, L2, M1'
+            }),
+            'ordre': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1
+            })
+        }
+
+class UEForm(forms.ModelForm):
+    class Meta:
+        model = UE
+        fields = ['code', 'intitule', 'filiere', 'niveau', 'semestre', 'credit']
+        widgets = {
+            'code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Code UE (ex: INF101)'
+            }),
+            'intitule': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Intitulé de l\'UE'
+            }),
+            'filiere': forms.Select(attrs={'class': 'form-control'}),
+            'niveau': forms.Select(attrs={'class': 'form-control'}),
+            'semestre': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 2
+            }),
+            'credit': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 30
+            })
+        }
+
+class EtudiantForm(forms.ModelForm):
+    class Meta:
+        model = Etudiant
+        fields = [
+            'matricule', 'nom', 'prenom', 'email', 'telephone',
+            'date_naissance', 'statut', 'filiere', 'niveau', 'photo'
+        ]
+        widgets = {
+            'matricule': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Matricule étudiant'
+            }),
+            'nom': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nom de famille'
+            }),
+            'prenom': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Prénom'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'email@example.com'
+            }),
+            'telephone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '+237 6XX XX XX XX'
+            }),
+            'date_naissance': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'statut': forms.Select(attrs={'class': 'form-control'}),
+            'filiere': forms.Select(attrs={'class': 'form-control'}),
+            'niveau': forms.Select(attrs={'class': 'form-control'}),
+            'photo': forms.FileInput(attrs={'class': 'form-control'})
+        }
+
+class PaiementForm(forms.ModelForm):
+    class Meta:
+        model = Paiement
+        fields = ['etudiant', 'annee_academique', 'montant', 'montant_attendu', 'est_regle', 'date_paiement']
+        widgets = {
+            'etudiant': forms.Select(attrs={'class': 'form-control'}),
+            'annee_academique': forms.Select(attrs={'class': 'form-control'}),
+            'montant': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0
+            }),
+            'montant_attendu': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 0
+            }),
+            'est_regle': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'date_paiement': forms.DateTimeInput(attrs={
+                'class': 'form-control',
+                'type': 'datetime-local'
+            })
+        }
+
+class InscriptionUEForm(forms.ModelForm):
+    class Meta:
+        model = InscriptionUE
+        fields = ['etudiant', 'ue', 'annee_academique', 'est_autorise_examen']
+        widgets = {
+            'etudiant': forms.Select(attrs={'class': 'form-control'}),
+            'ue': forms.Select(attrs={'class': 'form-control'}),
+            'annee_academique': forms.Select(attrs={'class': 'form-control'}),
+            'est_autorise_examen': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }
+
+class SalleForm(forms.ModelForm):
+    class Meta:
+        model = Salle
+        fields = ['code', 'capacite', 'batiment', 'etage']
+        widgets = {
+            'code': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Code salle (ex: S1)'
+            }),
+            'capacite': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'placeholder': 'Nombre de places'
+            }),
+            'batiment': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Bâtiment'
+            }),
+            'etage': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Étage'
+            })
+        }
+
+class SessionExamenForm(forms.ModelForm):
+    class Meta:
+        model = SessionExamen
+        fields = ['nom', 'type_session', 'annee_academique', 'date_debut', 'date_fin', 'active']
+        widgets = {
+            'nom': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nom de la session'
+            }),
+            'type_session': forms.Select(attrs={'class': 'form-control'}),
+            'annee_academique': forms.Select(attrs={'class': 'form-control'}),
+            'date_debut': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'date_fin': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'active': forms.CheckboxInput(attrs={'class': 'form-check-input'})
+        }
+
+class ExamenForm(forms.ModelForm):
+    class Meta:
+        model = Examen
+        fields = [
+            'ue', 'annee_academique', 'session', 'date',
+            'heure_debut', 'heure_fin', 'type_examen', 'salle', 'surveillant'
+        ]
+        widgets = {
+            'ue': forms.Select(attrs={'class': 'form-control'}),
+            'annee_academique': forms.Select(attrs={'class': 'form-control'}),
+            'session': forms.Select(attrs={'class': 'form-control'}),
+            'date': forms.DateInput(attrs={
+                'class': 'form-control',
+                'type': 'date'
+            }),
+            'heure_debut': forms.TimeInput(attrs={
+                'class': 'form-control',
+                'type': 'time'
+            }),
+            'heure_fin': forms.TimeInput(attrs={
+                'class': 'form-control',
+                'type': 'time'
+            }),
+            'type_examen': forms.Select(attrs={'class': 'form-control'}),
+            'salle': forms.Select(attrs={'class': 'form-control'}),
+            'surveillant': forms.Select(attrs={'class': 'form-control'})
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Filtrer les surveillants pour exclure ceux dont le username commence par "etu"
+        self.fields['surveillant'].queryset = User.objects.filter(
+            username__startswith='sur'
+        ).order_by('last_name', 'first_name')

@@ -1,0 +1,121 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'session_list' %}">Sessions d'examen</a></li>
+<li class="breadcrumb-item active">Supprimer</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Êtes-vous sûr de vouloir supprimer cette session d'examen ?</p>
+                
+                {% with examens=session.examen_set.all %}
+                {% if examens %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-ban"></i>
+                    <strong>Impossible de supprimer :</strong> Cette session contient {{ examens.count }} examen(s)
+                    <ul class="mt-2 mb-0">
+                        {% for examen in examens|slice:":3" %}
+                        <li>{{ examen.ue.code }} - {{ examen.date|date:"d/m/Y" }}</li>
+                        {% endfor %}
+                        {% if examens.count > 3 %}
+                        <li>... et {{ examens.count|add:"-3" }} autre(s)</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>Solution :</strong>
+                    <ul class="mb-0">
+                        <li>Déplacez d'abord les examens vers une autre session</li>
+                        <li>Ou supprimez tous les examens de cette session</li>
+                    </ul>
+                </div>
+                
+                <div class="text-center">
+                    <a href="{% url 'session_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Retour à la liste
+                    </a>
+                </div>
+                
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-warning"></i>
+                    <strong>Attention :</strong> Cette action est irréversible.
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Détails de la session :</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th width="40%">Nom :</th>
+                                <td><strong>{{ session.nom }}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Type :</th>
+                                <td>{{ session.get_type_session_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Année académique :</th>
+                                <td>{{ session.annee_academique.code }}</td>
+                            </tr>
+                            <tr>
+                                <th>Période :</th>
+                                <td>
+                                    Du {{ session.date_debut|date:"d/m/Y" }}<br>
+                                    Au {{ session.date_fin|date:"d/m/Y" }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Statut :</th>
+                                <td>
+                                    {% if session.active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Date création :</th>
+                                <td>{{ session.date_creation|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <strong>Information :</strong> Cette session ne contient aucun examen.
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'session_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmer la suppression
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

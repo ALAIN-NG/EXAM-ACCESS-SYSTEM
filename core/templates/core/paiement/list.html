@@ -1,0 +1,228 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Paiements{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Paiements</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Search Form -->
+    <form method="get" class="me-3 search-box">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Rechercher un paiement..." value="{{ query|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+    
+    <!-- Filtres -->
+    <div class="dropdown me-2">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-filter"></i> Filtres
+        </button>
+        <div class="dropdown-menu p-3" style="min-width: 300px;">
+            <form method="get">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                <div class="mb-3">
+                    <label for="etudiant" class="form-label">Étudiant</label>
+                    <select name="etudiant" id="etudiant" class="form-select">
+                        <option value="">Tous les étudiants</option>
+                        {% for etudiant in etudiants %}
+                        <option value="{{ etudiant.id }}" {% if selected_etudiant == etudiant.id|stringformat:"s" %}selected{% endif %}>
+                            {{ etudiant.matricule }} - {{ etudiant.nom }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="annee" class="form-label">Année académique</label>
+                    <select name="annee" id="annee" class="form-select">
+                        <option value="">Toutes les années</option>
+                        {% for annee in annees %}
+                        <option value="{{ annee.id }}" {% if selected_annee == annee.id|stringformat:"s" %}selected{% endif %}>
+                            {{ annee.code }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="est_regle" class="form-label">Statut</label>
+                    <select name="est_regle" id="est_regle" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="1" {% if selected_est_regle == "1" %}selected{% endif %}>Réglés</option>
+                        <option value="0" {% if selected_est_regle == "0" %}selected{% endif %}>Non réglés</option>
+                    </select>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">Appliquer</button>
+                    <a href="." class="btn btn-secondary btn-sm">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Create Button -->
+    <a href="{% url 'paiement_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouveau paiement
+    </a>
+</div>
+<br><br>
+<div class="card">
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Étudiant</th>
+                        <th>Année académique</th>
+                        <th>Montant attendu</th>
+                        <th>Montant payé</th>
+                        <th>Solde</th>
+                        <th>Statut</th>
+                        <th>Date paiement</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for paiement in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ paiement.etudiant.matricule }}</strong><br>
+                            <small>{{ paiement.etudiant.nom }} {{ paiement.etudiant.prenom }}</small>
+                        </td>
+                        <td>{{ paiement.annee_academique.code }}</td>
+                        <td>{{ paiement.montant_attendu|floatformat:"0" }} FCFA</td>
+                        <td>{{ paiement.montant|floatformat:"0" }} FCFA</td>
+                        <td>
+                            {% with solde=paiement.montant_attendu|add:paiement.montant %}
+                                {% if solde < 0 %}
+                                <span class="badge bg-danger">{{ solde|floatformat:"0" }} FCFA</span>
+                                {% elif solde == 0 %}
+                                <span class="badge bg-success">0 FCFA</span>
+                                {% else %}
+                                <span class="badge bg-success">{{ solde|floatformat:"0" }} FCFA</span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% if paiement.est_regle %}
+                            <span class="badge bg-success">Réglé</span>
+                            {% else %}
+                            <span class="badge bg-warning">Non réglé</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ paiement.date_paiement|date:"d/m/Y H:i"|default:"-" }}</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'paiement_update' paiement.pk %}" class="btn btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'paiement_delete' paiement.pk %}" class="btn btn-danger confirm-delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Statistiques -->
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body py-2">
+                        <small class="text-muted">Total attendu:</small>
+                        {% comment %} <h6 class="mb-0">
+                            {% with total=paginator.object_list|sum:"montant_attendu" %}
+                                {{ total|floatformat:"0" }} FCFA
+                            {% endwith %}
+                        </h6> {% endcomment %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body py-2">
+                        <small class="text-muted">Total payé:</small>
+                        {% comment %} <h6 class="mb-0">
+                            {% with total=paginator.object_list|sum:"montant" %}
+                                {{ total|floatformat:"0" }} FCFA
+                            {% endwith %}
+                        </h6> {% endcomment %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body py-2">
+                        <small class="text-muted">Paiements réglés:</small>
+                        {% comment %} <h6 class="mb-0">
+                            {% with regles=paginator.object_list|filter:"est_regle"|length %}
+                                {{ regles }}/{{ paginator.object_list|length }}
+                            {% endwith %}
+                        </h6> {% endcomment %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-3">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_etudiant %}&etudiant={{ selected_etudiant }}{% endif %}{% if selected_annee %}&annee={{ selected_annee }}{% endif %}{% if selected_est_regle %}&est_regle={{ selected_est_regle }}{% endif %}">
+                        &laquo;
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_etudiant %}&etudiant={{ selected_etudiant }}{% endif %}{% if selected_annee %}&annee={{ selected_annee }}{% endif %}{% if selected_est_regle %}&est_regle={{ selected_est_regle }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_etudiant %}&etudiant={{ selected_etudiant }}{% endif %}{% if selected_annee %}&annee={{ selected_annee }}{% endif %}{% if selected_est_regle %}&est_regle={{ selected_est_regle }}{% endif %}">
+                        &raquo;
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        <div class="text-muted">
+            Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} paiements
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+            <h4>Aucun paiement trouvé</h4>
+            <p class="text-muted">{% if query %}Aucun résultat pour "{{ query }}"{% else %}Commencez par enregistrer un paiement{% endif %}</p>
+            {% if not query %}
+            <a href="{% url 'paiement_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Ajouter le premier
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

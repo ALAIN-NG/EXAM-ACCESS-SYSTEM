@@ -1,0 +1,48 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Confirmer la suppression{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'niveau_list' %}">Niveaux</a></li>
+<li class="breadcrumb-item active">Supprimer</li>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mx-auto">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="lead">Êtes-vous sûr de vouloir supprimer ce niveau ?</p>
+                
+                <div class="alert alert-warning">
+                    <strong>Attention :</strong> Cette action est irréversible. Tous les étudiants et UEs associés à ce niveau seront également affectés.
+                </div>
+                
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h6>Détails du niveau :</h6>
+                        <p class="mb-1"><strong>Nom :</strong> {{ niveau.nom }}</p>
+                        <p class="mb-1"><strong>Ordre :</strong> {{ niveau.ordre }}</p>
+                        <p class="mb-0"><strong>Date création :</strong> {{ niveau.date_creation|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'niveau_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Confirmer la suppression
+                        </button>
+                    </div>
+                </form>
+            </div>
+</div>
+{% endblock %}

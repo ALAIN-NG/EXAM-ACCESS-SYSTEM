@@ -1,0 +1,208 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Gestion des Sessions d'Examen{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item active">Sessions d'examen</li>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex">
+    <!-- Search Form -->
+    <form method="get" class="me-3 search-box">
+        <div class="input-group">
+            <input type="text" class="form-control" name="q" placeholder="Rechercher par nom..." value="{{ query|default:'' }}">
+            <button class="btn btn-outline-secondary" type="submit">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+    
+    <!-- Filters Dropdown -->
+    <div class="dropdown me-2">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-filter"></i> Filtres
+        </button>
+        <div class="dropdown-menu p-3" style="min-width: 300px;">
+            <form method="get">
+                {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Type de session</label>
+                    <select name="type" class="form-select">
+                        <option value="">Tous les types</option>
+                        {% for type_code, type_name in session_types %}
+                        <option value="{{ type_code }}" {% if selected_type == type_code %}selected{% endif %}>
+                            {{ type_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Statut</label>
+                    <select name="active" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="1" {% if selected_active == '1' %}selected{% endif %}>Active</option>
+                        <option value="0" {% if selected_active == '0' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">Appliquer</button>
+                    <a href="." class="btn btn-secondary btn-sm">Réinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Create Button -->
+    <a href="{% url 'session_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Nouvelle session
+    </a>
+</div>
+<br><br>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Liste des sessions d'examen</h5>
+        <span class="badge bg-secondary">{{ page_obj.paginator.count }} session(s)</span>
+    </div>
+    
+    <div class="card-body">
+        {% if page_obj %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Année académique</th>
+                        <th>Période</th>
+                        <th>Examens</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in page_obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ session.nom }}</strong>
+                        </td>
+                        <td>
+                            {% if session.type_session == 'normale' %}
+                            <span class="badge bg-primary">{{ session.get_type_session_display }}</span>
+                            {% else %}
+                            <span class="badge bg-warning">{{ session.get_type_session_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ session.annee_academique.code }}</td>
+                        <td>
+                            {{ session.date_debut|date:"d/m/Y" }}<br>
+                            <small class="text-muted">au {{ session.date_fin|date:"d/m/Y" }}</small>
+                        </td>
+                        <td>
+                            {% with exam_count=session.examen_set.count %}
+                            <span class="badge bg-info">{{ exam_count }} examen(s)</span>
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% if session.active %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-play-circle"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-pause-circle"></i> Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'session_update' session.pk %}" class="btn btn-warning" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'session_delete' session.pk %}" class="btn btn-danger confirm-delete" title="Supprimer">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_active %}&active={{ selected_active }}{% endif %}">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_active %}&active={{ selected_active }}{% endif %}">{{ num }}</a>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if selected_active %}&active={{ selected_active }}{% endif %}">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        <!-- Stats -->
+        <div class="text-muted mt-3">
+            <small>
+                <i class="fas fa-info-circle"></i>
+                Affichage de {{ page_obj.start_index }} à {{ page_obj.end_index }} sur {{ page_obj.paginator.count }} session(s)
+                {% if query or selected_type or selected_active %}
+                <span class="ms-3">
+                    <a href="." class="text-decoration-none">
+                        <i class="fas fa-times"></i> Effacer les filtres
+                    </a>
+                </span>
+                {% endif %}
+            </small>
+        </div>
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-calendar-week fa-3x text-muted mb-3"></i>
+            <h4>Aucune session trouvée</h4>
+            <p class="text-muted">
+                {% if query or selected_type or selected_active %}
+                Aucun résultat pour votre recherche.
+                {% else %}
+                Commencez par créer une session d'examen.
+                {% endif %}
+            </p>
+            {% if not query and not selected_type and not selected_active %}
+            <a href="{% url 'session_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Créer la première session
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}
